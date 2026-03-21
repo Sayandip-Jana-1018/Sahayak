@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Turbo
+.turbo/
+
+# Environment
+.env
+.env.example
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Debug
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+
+# Docker
+docker-compose.override.yml
+
+# Generated
+*.tsbuildinfo
+next-env.d.ts
+
+# Sentry
+.sentryclirc
+
+# PWA
+public/sw.js
+public/workbox-*.js
+public/sw.js.map
+public/workbox-*.js.map

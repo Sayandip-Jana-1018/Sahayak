@@ -1,0 +1,35 @@
+{
+  "name": "@sahayak/api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "fastify": "^4.28.0",
+    "@fastify/cors": "^9.0.0",
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/multipart": "^8.3.0",
+    "@fastify/rate-limit": "^9.1.0",
+    "@google/generative-ai": "^0.21.0",
+    "@sahayak/db": "workspace:*",
+    "bullmq": "^5.25.0",
+    "ioredis": "^5.4.0",
+    "node-cron": "^3.0.3",
+    "socket.io": "^4.8.0",
+    "zod": "^3.23.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "pino-pretty": "^13.0.0",
+    "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.11",
+    "rimraf": "^6.0.1"
+  }
+}

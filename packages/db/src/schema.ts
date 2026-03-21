@@ -1,0 +1,269 @@
+import { pgTable, uuid, text, timestamp, integer, boolean, decimal, date, jsonb, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+
+// ═══════════════════════════════════════════
+// USERS
+// ═══════════════════════════════════════════
+
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clerkId: text('clerk_id').unique().notNull(),
+  email: text('email').unique(),
+  phone: text('phone'),
+  fullName: text('full_name'),
+  avatarUrl: text('avatar_url'),
+  role: text('role', { enum: ['family', 'elderly', 'ngo_admin', 'sys_admin'] }).default('family'),
+  organizationId: uuid('organization_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().$onUpdate(() => new Date()),
+}, (t) => [
+  uniqueIndex('users_clerk_idx').on(t.clerkId),
+  index('users_email_idx').on(t.email),
+]);
+
+// ═══════════════════════════════════════════
+// ELDERLY PROFILES
+// ═══════════════════════════════════════════
+
+export const elderlyProfiles = pgTable('elderly_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  createdByUserId: uuid('created_by_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  ageYears: integer('age_years'),
+  city: text('city'),
+  state: text('state'),
+  district: text('district'),
+  primaryLanguage: text('primary_language', {
+    enum: ['hi', 'ta', 'bn', 'mr', 'te', 'kn', 'gu', 'pa', 'ml', 'ur', 'en'],
+  }).default('hi'),
+  phoneNumber: text('phone_number').unique(),
+  deviceId: text('device_id'),
+  voicePrintVector: text('voice_print_vector'),
+  fontSizePreference: text('font_size', { enum: ['normal', 'large', 'xlarge'] }).default('normal'),
+  isActive: boolean('is_active').default(true),
+  lastActiveAt: timestamp('last_active_at', { withTimezone: true }),
+  lastLocationLat: decimal('last_location_lat', { precision: 10, scale: 7 }),
+  lastLocationLng: decimal('last_location_lng', { precision: 10, scale: 7 }),
+  lastLocationAt: timestamp('last_location_at', { withTimezone: true }),
+  batteryLevel: integer('battery_level'),
+  lonelinessDaysCount: integer('loneliness_days_count').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('elderly_created_by_idx').on(t.createdByUserId),
+  index('elderly_phone_idx').on(t.phoneNumber),
+]);
+
+// ═══════════════════════════════════════════
+// CAREGIVER LINKS
+// ═══════════════════════════════════════════
+
+export const caregiverLinks = pgTable('caregiver_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  caregiverId: uuid('caregiver_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  relationship: text('relationship'),
+  priority: integer('priority').default(1),
+  sosEnabled: boolean('sos_enabled').default(true),
+  locationAccess: boolean('location_access').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('caregiver_link_caregiver_idx').on(t.caregiverId),
+  index('caregiver_link_elderly_idx').on(t.elderlyProfileId),
+]);
+
+// ═══════════════════════════════════════════
+// MEDICATION REMINDERS
+// ═══════════════════════════════════════════
+
+export const medicationReminders = pgTable('medication_reminders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  medicineName: text('medicine_name').notNull(),
+  genericName: text('generic_name'),
+  dosage: text('dosage'),
+  unit: text('unit'),
+  frequency: text('frequency'),
+  reminderTimes: text('reminder_times').array(),
+  startDate: date('start_date'),
+  endDate: date('end_date'),
+  isActive: boolean('is_active').default(true),
+  prescriptionImageUrl: text('prescription_image_url'),
+  instructions: text('instructions'),
+  bullJobIds: text('bull_job_ids').array(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('med_reminder_elderly_idx').on(t.elderlyProfileId),
+]);
+
+// ═══════════════════════════════════════════
+// MEDICATION LOGS
+// ═══════════════════════════════════════════
+
+export const medicationLogs = pgTable('medication_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  reminderId: uuid('reminder_id').notNull().references(() => medicationReminders.id, { onDelete: 'cascade' }),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  scheduledAt: timestamp('scheduled_at', { withTimezone: true }).notNull(),
+  takenAt: timestamp('taken_at', { withTimezone: true }),
+  status: text('status', { enum: ['pending', 'taken', 'missed', 'skipped'] }).default('pending'),
+  takenBy: text('taken_by'),
+  notes: text('notes'),
+}, (t) => [
+  index('medlog_profile_date_idx').on(t.elderlyProfileId, t.scheduledAt),
+]);
+
+// ═══════════════════════════════════════════
+// SOS EVENTS
+// ═══════════════════════════════════════════
+
+export const sosEvents = pgTable('sos_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  triggeredAt: timestamp('triggered_at', { withTimezone: true }).defaultNow(),
+  triggerType: text('trigger_type', { enum: ['voice', 'shake', 'inactivity', 'fall'] }),
+  severity: text('severity', { enum: ['low', 'medium', 'high', 'critical'] }).default('high'),
+  locationLat: decimal('location_lat', { precision: 10, scale: 7 }),
+  locationLng: decimal('location_lng', { precision: 10, scale: 7 }),
+  responseTimeMs: integer('response_time_ms'),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  resolvedByUserId: uuid('resolved_by_user_id'),
+  notifiedUserIds: text('notified_user_ids').array(),
+  nearestHospitalName: text('nearest_hospital_name'),
+  nearestHospitalPhone: text('nearest_hospital_phone'),
+  nearestHospitalDistance: decimal('nearest_hospital_distance', { precision: 6, scale: 2 }),
+  smsCount: integer('sms_count').default(0),
+  pushCount: integer('push_count').default(0),
+  notes: text('notes'),
+}, (t) => [
+  index('sos_elderly_idx').on(t.elderlyProfileId),
+  index('sos_triggered_idx').on(t.triggeredAt),
+]);
+
+// ═══════════════════════════════════════════
+// VOICE COMMAND LOGS
+// ═══════════════════════════════════════════
+
+export const voiceCommandLogs = pgTable('voice_command_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  commandText: text('command_text'),
+  detectedIntent: text('detected_intent'),
+  language: text('language'),
+  wasSuccessful: boolean('was_successful'),
+  confidenceScore: decimal('confidence_score', { precision: 4, scale: 3 }),
+  processingMs: integer('processing_ms'),
+  modelUsed: text('model_used'),
+  timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('vcl_profile_time_idx').on(t.elderlyProfileId, t.timestamp),
+]);
+
+// ═══════════════════════════════════════════
+// ORGANIZATIONS
+// ═══════════════════════════════════════════
+
+export const organizations = pgTable('organizations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  type: text('type', { enum: ['ngo', 'hospital', 'old_age_home', 'csc', 'government'] }),
+  state: text('state'),
+  contactEmail: text('contact_email'),
+  contactPhone: text('contact_phone'),
+  deviceLimit: integer('device_limit').default(10),
+  activeDevices: integer('active_devices').default(0),
+  subscriptionTier: text('subscription_tier', { enum: ['org_basic', 'org_pro', 'org_enterprise'] }).default('org_basic'),
+  subscriptionValidUntil: timestamp('subscription_valid_until', { withTimezone: true }),
+  customFlowJson: jsonb('custom_flow_json'),
+  logoUrl: text('logo_url'),
+  brandColor: text('brand_color'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// ═══════════════════════════════════════════
+// DEMO REQUESTS
+// ═══════════════════════════════════════════
+
+export const demoRequests = pgTable('demo_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  organization: text('organization').notNull(),
+  phone: text('phone').notNull(),
+  email: text('email'),
+  state: text('state'),
+  estimatedDevices: integer('estimated_devices'),
+  status: text('status', { enum: ['new', 'contacted', 'demo_scheduled', 'converted', 'rejected'] }).default('new'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// ═══════════════════════════════════════════
+// RELATIONS
+// ═══════════════════════════════════════════
+
+export const usersRelations = relations(users, ({ many, one }) => ({
+  elderlyProfiles: many(elderlyProfiles),
+  caregiverLinks: many(caregiverLinks),
+  organization: one(organizations, {
+    fields: [users.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export const elderlyProfilesRelations = relations(elderlyProfiles, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [elderlyProfiles.createdByUserId],
+    references: [users.id],
+  }),
+  caregiverLinks: many(caregiverLinks),
+  medicationReminders: many(medicationReminders),
+  medicationLogs: many(medicationLogs),
+  sosEvents: many(sosEvents),
+  voiceCommandLogs: many(voiceCommandLogs),
+}));
+
+export const caregiverLinksRelations = relations(caregiverLinks, ({ one }) => ({
+  caregiver: one(users, {
+    fields: [caregiverLinks.caregiverId],
+    references: [users.id],
+  }),
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [caregiverLinks.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+}));
+
+export const medicationRemindersRelations = relations(medicationReminders, ({ one, many }) => ({
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [medicationReminders.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+  logs: many(medicationLogs),
+}));
+
+export const medicationLogsRelations = relations(medicationLogs, ({ one }) => ({
+  reminder: one(medicationReminders, {
+    fields: [medicationLogs.reminderId],
+    references: [medicationReminders.id],
+  }),
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [medicationLogs.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+}));
+
+export const sosEventsRelations = relations(sosEvents, ({ one }) => ({
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [sosEvents.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+}));
+
+export const voiceCommandLogsRelations = relations(voiceCommandLogs, ({ one }) => ({
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [voiceCommandLogs.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+}));
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  members: many(users),
+}));
