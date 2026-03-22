@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
+import { useLocaleStore } from '@/store/localeStore';
 import { Mic, Pill, AlertTriangle, Bot, Landmark, LayoutDashboard } from 'lucide-react';
 
 const FEATURES = [
@@ -40,6 +41,7 @@ const FEATURES = [
 export function SolutionSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
+  const { t } = useLocaleStore();
 
   return (
     <section
@@ -65,20 +67,20 @@ export function SolutionSection() {
           marginBottom: 16, fontFamily: 'var(--font-accent)',
           letterSpacing: '0.06em', textTransform: 'uppercase',
         }}>
-          The Solution
+          {t('section.solution')}
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
           fontWeight: 900, lineHeight: 1.1, maxWidth: 600, margin: '0 auto',
           fontStyle: 'italic',
         }}>
-          Meet <span style={{ color: 'var(--sah-accent-1)' }}>सहायक</span>
+          {t('solution.heading')}
         </h2>
         <p style={{
           fontSize: 17, color: 'var(--text-secondary)', marginTop: 16,
           maxWidth: 500, margin: '16px auto 0', fontFamily: 'var(--font-body)',
         }}>
-          Six powerful features designed with love for India&apos;s elders.
+          {t('solution.sub')}
         </p>
       </motion.div>
 

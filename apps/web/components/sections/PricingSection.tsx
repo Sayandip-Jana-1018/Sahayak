@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check } from 'lucide-react';
+import { useLocaleStore } from '@/store/localeStore';
 
 const PLANS = [
   {
@@ -66,6 +67,7 @@ export function PricingSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.15 });
   const [isAnnual, setIsAnnual] = useState(true);
+  const { t } = useLocaleStore();
 
   return (
     <section ref={sectionRef} id="pricing" style={{ padding: 'clamp(80px, 10vw, 160px) 24px', maxWidth: 1200, margin: '0 auto' }}>
@@ -83,19 +85,19 @@ export function PricingSection() {
           marginBottom: 16, fontFamily: 'var(--font-accent)',
           letterSpacing: '0.08em', textTransform: 'uppercase',
         }}>
-          Pricing
+          {t('section.pricing')}
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
           fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
         }}>
-          Care shouldn&apos;t cost a <span style={{ color: 'var(--sah-accent-1)' }}>fortune</span>
+          {t('pricing.heading')}
         </h2>
       </motion.div>
 
       {/* Toggle */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48, gap: 12, alignItems: 'center' }}>
-        <span style={{ fontSize: 14, opacity: isAnnual ? 0.5 : 1, fontWeight: isAnnual ? 400 : 600, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>Monthly</span>
+        <span style={{ fontSize: 14, opacity: isAnnual ? 0.5 : 1, fontWeight: isAnnual ? 400 : 600, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>{t('common.monthly')}</span>
         <button
           onClick={() => setIsAnnual(!isAnnual)}
           style={{
@@ -111,8 +113,8 @@ export function PricingSection() {
             transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }} />
         </button>
-        <span style={{ fontSize: 14, opacity: isAnnual ? 1 : 0.5, fontWeight: isAnnual ? 600 : 400, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>Annual</span>
-        {isAnnual && <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 9999, background: 'rgba(34,197,94,0.1)', color: '#22C55E', fontWeight: 600, fontFamily: 'var(--font-accent)' }}>Save 30%</span>}
+        <span style={{ fontSize: 14, opacity: isAnnual ? 1 : 0.5, fontWeight: isAnnual ? 600 : 400, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>{t('common.annual')}</span>
+        {isAnnual && <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 9999, background: 'rgba(34,197,94,0.1)', color: '#22C55E', fontWeight: 600, fontFamily: 'var(--font-accent)' }}>{t('common.save30')}</span>}
       </div>
 
       {/* Cards */}

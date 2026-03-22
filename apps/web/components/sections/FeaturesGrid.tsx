@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
+import { useLocaleStore } from '@/store/localeStore';
 import {
   Mic, Pill, AlertTriangle, Bot, Landmark,
   LayoutDashboard, Scan, IndianRupee, Globe,
@@ -22,6 +23,7 @@ const FEATURES = [
 export function FeaturesGrid() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.15 });
+  const { t } = useLocaleStore();
 
   return (
     <section
@@ -47,13 +49,13 @@ export function FeaturesGrid() {
           marginBottom: 16, fontFamily: 'var(--font-accent)',
           letterSpacing: '0.06em', textTransform: 'uppercase',
         }}>
-          Features
+          {t('section.features')}
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
           fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
         }}>
-          Everything an elder <span style={{ color: 'var(--sah-accent-1)' }}>needs</span>
+          {t('features.heading')}
         </h2>
       </motion.div>
 

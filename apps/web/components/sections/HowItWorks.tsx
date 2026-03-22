@@ -3,34 +3,18 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Smartphone, Mic, LayoutDashboard } from 'lucide-react';
+import { useLocaleStore } from '@/store/localeStore';
 
 const STEPS = [
-  {
-    step: 1,
-    title: 'Set Up in 2 Minutes',
-    description: 'Install the app on any Android phone. Add your elder\'s profile — name, language, and emergency contacts. That\'s it.',
-    icon: Smartphone,
-    color: '#FF9933',
-  },
-  {
-    step: 2,
-    title: 'They Just Speak',
-    description: '"दवाई याद दिला दो," "राहुल को फोन लगाओ," "मदद चाहिए" — Sahayak understands and acts instantly.',
-    icon: Mic,
-    color: '#A855F7',
-  },
-  {
-    step: 3,
-    title: 'You Stay Connected',
-    description: 'Monitor medication adherence, location, and wellness from your family dashboard. Get instant SOS alerts.',
-    icon: LayoutDashboard,
-    color: '#22C55E',
-  },
+  { step: 1, titleKey: 'how.step1.title', descKey: 'how.step1.desc', icon: Smartphone, color: '#FF9933' },
+  { step: 2, titleKey: 'how.step2.title', descKey: 'how.step2.desc', icon: Mic, color: '#A855F7' },
+  { step: 3, titleKey: 'how.step3.title', descKey: 'how.step3.desc', icon: LayoutDashboard, color: '#22C55E' },
 ];
 
 export function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
+  const { t } = useLocaleStore();
 
   return (
     <section
@@ -56,13 +40,13 @@ export function HowItWorks() {
           marginBottom: 16, fontFamily: 'var(--font-accent)',
           letterSpacing: '0.06em', textTransform: 'uppercase',
         }}>
-          How It Works
+          {t('section.howItWorks')}
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
           fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
         }}>
-          Simple as <span style={{ color: 'var(--sah-accent-1)' }}>1-2-3</span>
+          {t('how.heading')}
         </h2>
       </motion.div>
 
@@ -106,10 +90,10 @@ export function HowItWorks() {
             fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900,
             marginBottom: 12, color: STEPS[0].color, fontStyle: 'italic',
           }}>
-            {STEPS[0].title}
+            {t(STEPS[0].titleKey)}
           </h3>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', maxWidth: 380 }}>
-            {STEPS[0].description}
+            {t(STEPS[0].descKey)}
           </p>
         </motion.div>
 
@@ -137,10 +121,10 @@ export function HowItWorks() {
                 fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700,
                 marginBottom: 8, color: STEPS[1].color,
               }}>
-                {STEPS[1].title}
+                {t(STEPS[1].titleKey)}
               </h3>
               <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)' }}>
-                {STEPS[1].description}
+                {t(STEPS[1].descKey)}
               </p>
             </div>
           </div>
@@ -170,10 +154,10 @@ export function HowItWorks() {
                 fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700,
                 marginBottom: 8, color: STEPS[2].color,
               }}>
-                {STEPS[2].title}
+                {t(STEPS[2].titleKey)}
               </h3>
               <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)' }}>
-                {STEPS[2].description}
+                {t(STEPS[2].descKey)}
               </p>
             </div>
           </div>

@@ -1,16 +1,10 @@
 'use client';
 
-import { useRef, useState, useEffect, useMemo } from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
-import dynamic from 'next/dynamic';
+import { useRef, useState, useEffect } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { useLocaleStore } from '@/store/localeStore';
 import { useThemeStore } from '@/store/themeStore';
 import { Lock, Wifi, Globe, Heart } from 'lucide-react';
-
-const Phone3D = dynamic(
-  () => import('@/components/hero/Phone3D').then((m) => m.Phone3D),
-  { ssr: false }
-);
 
 /* ── Staggered word animation ── */
 function StaggeredLine({ text, delay = 0, gradient = false }: {
@@ -53,19 +47,7 @@ const TRUST_ITEMS = [
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.15 });
-  const [isMounted, setIsMounted] = useState(false);
   const { t } = useLocaleStore();
-
-  // Scroll-based phone rotation (360°)
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start start', 'end start'],
-  });
-  const phoneRotateY = useTransform(scrollYProgress, [0, 1], [0, 360]);
-  const phoneScale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.05, 0.9]);
-  const phoneTranslateY = useTransform(scrollYProgress, [0, 1], [0, 120]);
-
-  useEffect(() => { setIsMounted(true); }, []);
 
   return (
     <section
@@ -185,31 +167,14 @@ export function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Right: Phone with scroll-driven 360° rotation */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 1.2, delay: 0.3, type: 'spring', bounce: 0.12 }}
+        {/* Right: Phone placeholder — actual 3D phone is rendered by PhoneScene overlay */}
+        <div
+          className="hero-3d"
           style={{
             position: 'relative',
             height: 'min(70vh, 620px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            perspective: 1200,
           }}
-          className="hero-3d"
-        >
-          {/* Phone container with scroll-linked rotation */}
-          <motion.div
-            style={{
-              rotateY: phoneRotateY,
-              scale: phoneScale,
-              y: phoneTranslateY,
-              transformStyle: 'preserve-3d',
-            }}
-          >
-            {isMounted && <Phone3D />}
-          </motion.div>
-        </motion.div>
+        />
 
         {/* Mobile phone fallback */}
         <div className="hero-mobile-phone" style={{ display: 'none', textAlign: 'center', marginTop: 20 }}>

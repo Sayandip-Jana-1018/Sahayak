@@ -1,3 +1,6 @@
+'use client';
+
+import dynamic from 'next/dynamic';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { StoryScroll } from '@/components/sections/StoryScroll';
 import { ProblemSection } from '@/components/sections/ProblemSection';
@@ -12,9 +15,15 @@ import { ForOrganizations } from '@/components/sections/ForOrganizations';
 import { PricingSection } from '@/components/sections/PricingSection';
 import { Footer } from '@/components/sections/Footer';
 
+const PhoneScene = dynamic(
+  () => import('@/components/hero/PhoneScene').then((m) => m.PhoneScene),
+  { ssr: false }
+);
+
 export default function HomePage() {
   return (
     <>
+      <PhoneScene />
       <HeroSection />
       <StoryScroll />
       <ProblemSection />

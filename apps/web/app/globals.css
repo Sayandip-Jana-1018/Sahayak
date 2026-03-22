@@ -822,3 +822,54 @@ html.light .icon-container,
   background: rgba(27, 42, 74, 0.04);
   border-color: rgba(27, 42, 74, 0.08);
 }
+
+/* ═══════════════════════════════════════════
+   PHONE FLOATING BADGES — bobbing animation
+   ═══════════════════════════════════════════ */
+
+.phone-floating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: rgba(15, 15, 30, 0.55);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: badgeBob 3s ease-in-out infinite;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 11;
+}
+
+/* Light mode override */
+.light .phone-floating-badge,
+[data-theme="light"] .phone-floating-badge {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(27, 42, 74, 0.1);
+  color: var(--text-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes badgeBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Hide floating badges on mobile */
+@media (max-width: 768px) {
+  .phone-floating-badge {
+    display: none;
+  }
+}

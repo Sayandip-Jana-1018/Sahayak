@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
+import { useLocaleStore } from '@/store/localeStore';
 import CountUp from 'react-countup';
 import { Users, Globe, Zap, Shield, Landmark, Heart } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const METRICS = [
 export function ImpactNumbers() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
+  const { t } = useLocaleStore();
 
   return (
     <section
@@ -42,13 +44,13 @@ export function ImpactNumbers() {
           marginBottom: 16, fontFamily: 'var(--font-accent)',
           letterSpacing: '0.06em', textTransform: 'uppercase',
         }}>
-          Impact
+          {t('section.impact')}
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
           fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
         }}>
-          Numbers that <span style={{ color: 'var(--sah-accent-1)' }}>matter</span>
+          {t('impact.heading')}
         </h2>
       </motion.div>
 
