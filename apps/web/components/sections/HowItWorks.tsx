@@ -44,8 +44,7 @@ export function HowItWorks() {
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
-          fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
-        }}>
+          fontWeight: 900, lineHeight: 1.1, }}>
           {t('how.heading')}
         </h2>
       </motion.div>
@@ -88,8 +87,7 @@ export function HowItWorks() {
           </div>
           <h3 style={{
             fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900,
-            marginBottom: 12, color: STEPS[0].color, fontStyle: 'italic',
-          }}>
+            marginBottom: 12, color: STEPS[0].color, }}>
             {t(STEPS[0].titleKey)}
           </h3>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', maxWidth: 380 }}>

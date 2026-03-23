@@ -72,8 +72,7 @@ export function SolutionSection() {
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
           fontWeight: 900, lineHeight: 1.1, maxWidth: 600, margin: '0 auto',
-          fontStyle: 'italic',
-        }}>
+          }}>
           {t('solution.heading')}
         </h2>
         <p style={{

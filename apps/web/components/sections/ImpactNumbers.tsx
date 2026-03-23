@@ -48,8 +48,7 @@ export function ImpactNumbers() {
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
-          fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
-        }}>
+          fontWeight: 900, lineHeight: 1.1, }}>
           {t('impact.heading')}
         </h2>
       </motion.div>

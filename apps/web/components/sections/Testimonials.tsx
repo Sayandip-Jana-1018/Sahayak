@@ -116,7 +116,7 @@ export function Testimonials() {
             <div style={{ marginBottom: 12 }}>
               {'⭐'.repeat(t.rating)}
             </div>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', }}>
               &ldquo;{t.quote}&rdquo;
             </p>
           </motion.div>

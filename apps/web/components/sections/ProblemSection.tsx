@@ -136,8 +136,7 @@ export function ProblemSection() {
             fontSize: 'clamp(20px, 3vw, 28px)',
             lineHeight: 1.4,
             opacity: 0.8,
-            fontStyle: 'italic',
-          }}
+            }}
         >
           &ldquo;मेरे बच्चे कहते हैं फोन से सब हो जाता है, पर मुझे तो बटन भी नहीं दिखते।&rdquo;
         </p>
