@@ -2,16 +2,15 @@
 
 import { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Check } from 'lucide-react';
 import { useLocaleStore } from '@/store/localeStore';
 
 const PLANS = [
   {
+    id: 'free',
     name: 'FREE',
     nameSub: 'For Families',
     price: { monthly: 0, annual: 0 },
-    color: '#22C55E',
-    borderColor: 'rgba(34, 197, 94, 0.15)',
+    color: '#22C55E', // Green
     features: [
       '1 elderly profile',
       'Voice commands (11 languages)',
@@ -24,11 +23,11 @@ const PLANS = [
     popular: false,
   },
   {
+    id: 'family',
     name: 'FAMILY',
     nameSub: 'For Extended Care',
     price: { monthly: 299, annual: 2499 },
-    color: '#FF9933',
-    borderColor: 'rgba(255, 153, 51, 0.4)',
+    color: '#F59E0B', // Amber
     features: [
       'Up to 5 elderly profiles',
       'All Free features +',
@@ -43,11 +42,11 @@ const PLANS = [
     popular: true,
   },
   {
+    id: 'org',
     name: 'ORGANIZATION',
     nameSub: 'For NGOs & Homes',
     price: { monthly: null, annual: null },
-    color: '#A855F7',
-    borderColor: 'rgba(168, 85, 247, 0.2)',
+    color: '#A855F7', // Purple
     features: [
       'Unlimited profiles',
       'All Family features +',
@@ -89,15 +88,15 @@ export function PricingSection() {
         </span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
-          fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
+          fontWeight: 900, lineHeight: 1.1,
         }}>
           {t('pricing.heading')}
         </h2>
       </motion.div>
 
       {/* Toggle */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48, gap: 12, alignItems: 'center' }}>
-        <span style={{ fontSize: 14, opacity: isAnnual ? 0.5 : 1, fontWeight: isAnnual ? 400 : 600, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>{t('common.monthly')}</span>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 64, gap: 12, alignItems: 'center' }}>
+        <span style={{ fontSize: 14, opacity: isAnnual ? 0.5 : 1, fontWeight: isAnnual ? 400 : 700, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>{t('common.monthly')}</span>
         <button
           onClick={() => setIsAnnual(!isAnnual)}
           style={{
@@ -113,88 +112,107 @@ export function PricingSection() {
             transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }} />
         </button>
-        <span style={{ fontSize: 14, opacity: isAnnual ? 1 : 0.5, fontWeight: isAnnual ? 600 : 400, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>{t('common.annual')}</span>
-        {isAnnual && <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 9999, background: 'rgba(34,197,94,0.1)', color: '#22C55E', fontWeight: 600, fontFamily: 'var(--font-accent)' }}>{t('common.save30')}</span>}
+        <span style={{ fontSize: 14, opacity: isAnnual ? 1 : 0.5, fontWeight: isAnnual ? 700 : 400, transition: 'opacity 0.2s', fontFamily: 'var(--font-body)' }}>{t('common.annual')}</span>
+        {isAnnual && <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 9999, background: 'rgba(34,197,94,0.1)', color: '#22C55E', fontWeight: 700, fontFamily: 'var(--font-accent)' }}>{t('common.save30')}</span>}
       </div>
 
-      {/* Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, alignItems: 'start' }}>
+      {/* Pricing Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32, alignItems: 'stretch' }}>
         {PLANS.map((plan, i) => (
           <motion.div
             key={plan.name}
-            className="glass-card section-card"
-            initial={{ opacity: 0, y: 40, scale: 0.96 }}
-            animate={isInView ? { opacity: 1, y: 0, scale: plan.popular ? 1.03 : 1 } : {}}
-            transition={{ duration: 0.5, delay: i * 0.1 + 0.2 }}
-            style={{
-              padding: 32,
-              position: 'relative',
-              borderColor: plan.borderColor,
-              ...(plan.popular ? {
-                border: `1.5px solid ${plan.borderColor}`,
-                boxShadow: `0 4px 24px rgba(0,0,0,0.25), 0 0 60px rgba(255,153,51,0.08)`,
-              } : {}),
+            className={`pricing-card pricing-card-${plan.id}`}
+            initial={{ opacity: 0, y: 40 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: i * 0.15 + 0.2 }}
+            style={{ 
+              padding: '48px 40px',
+              ...(plan.popular ? { transform: 'scale(1.04)' } : {})
             }}
           >
+            {/* 4px Solid Color Top Bar */}
+            <div className="pricing-top-bar" />
+
+            {/* Soft Radial Glow Tint */}
+            <div className={`pricing-blob pricing-blob-${plan.id}`} />
+
+            {/* Floating Popular Badge */}
             {plan.popular && (
-              <span style={{
-                position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                background: 'var(--sah-accent-1)', color: '#000',
-                fontSize: 11, fontFamily: 'var(--font-accent)', fontWeight: 700,
-                letterSpacing: '0.1em', padding: '4px 14px', borderRadius: 9999,
+              <div style={{
+                position: 'absolute', top: 0, left: '50%', transform: 'translate(-50%, -50%)',
+                background: 'linear-gradient(135deg, #F59E0B, #EA580C)', color: '#fff',
+                fontSize: 12, fontFamily: 'var(--font-accent)', fontWeight: 800,
+                letterSpacing: '0.12em', padding: '6px 18px', borderRadius: 9999,
+                boxShadow: '0 8px 20px rgba(245,158,11,0.3)', zIndex: 20,
+                whiteSpace: 'nowrap'
               }}>
                 MOST POPULAR
-              </span>
+              </div>
             )}
 
             <h3 style={{
-              fontFamily: 'var(--font-accent)', fontSize: 14, fontWeight: 700,
-              letterSpacing: '0.1em', color: plan.color, marginBottom: 4,
+              fontFamily: 'var(--font-accent)', fontSize: 14, fontWeight: 800,
+              letterSpacing: '0.15em', color: plan.color, marginBottom: 12,
             }}>
               {plan.name}
             </h3>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20, fontFamily: 'var(--font-body)' }}>
+            
+            {/* Audience Pill */}
+            <div style={{ 
+              display: 'inline-block',
+              background: `${plan.color}26`, /* 15% opacity */
+              color: plan.color,
+              padding: '6px 14px', borderRadius: 9999,
+              fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)',
+              marginBottom: 32 
+            }}>
               {plan.nameSub}
-            </p>
+            </div>
 
-            <div style={{ marginBottom: 24 }}>
+            {/* Massive Price Block */}
+            <div style={{ marginBottom: 24, display: 'flex', alignItems: 'baseline', gap: 8 }}>
               {plan.price.monthly !== null ? (
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 44, fontWeight: 900, fontFamily: 'var(--font-display)' }}>
+                <>
+                  <span className="pricing-number" style={{ 
+                    fontSize: 64, fontWeight: 900, fontFamily: 'var(--font-display)', 
+                    textShadow: `0 0 24px ${plan.color}40`, lineHeight: 1
+                  }}>
                     ₹{isAnnual ? Math.round((plan.price.annual || 0) / 12) : plan.price.monthly}
                   </span>
-                  {plan.price.monthly > 0 && <span style={{ fontSize: 14, color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>/month</span>}
-                </div>
+                  {plan.price.monthly > 0 && <span className="pricing-period" style={{ fontSize: 15, fontFamily: 'var(--font-body)', opacity: 0.6 }}>/month</span>}
+                </>
               ) : (
-                <span style={{ fontSize: 32, fontWeight: 900, fontFamily: 'var(--font-display)' }}>Custom</span>
+                <span className="pricing-number" style={{ 
+                  fontSize: 56, fontWeight: 900, fontFamily: 'var(--font-display)', 
+                  textShadow: `0 0 24px ${plan.color}40`, lineHeight: 1
+                }}>
+                  Custom
+                </span>
               )}
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* Glowing Divider */}
+            <div style={{ width: '100%', height: 1, background: `linear-gradient(90deg, ${plan.color}80, transparent)`, marginBottom: 32 }} />
+
+            {/* Features List */}
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {plan.features.map((feature) => (
-                <li key={feature} style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)' }}>
-                  <Check size={14} strokeWidth={2.5} style={{ color: '#2D6A4F', flexShrink: 0 }} />
-                  {feature}
+                <li key={feature} className="pricing-list-item">
+                  {/* Custom Filled Check Circle */}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: plan.color, flexShrink: 0, marginTop: 1 }}>
+                    <circle cx="12" cy="12" r="11" fill="currentColor" fillOpacity="0.15"/>
+                    <path d="M8 12L11 15L16 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span>{feature}</span>
                 </li>
               ))}
             </ul>
 
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                width: '100%', padding: '12px 24px', borderRadius: 9999,
-                border: plan.popular ? 'none' : `1px solid ${plan.borderColor}`,
-                background: plan.popular ? `linear-gradient(135deg, ${plan.color}, ${plan.color}dd)` : 'transparent',
-                color: plan.popular ? '#000' : plan.color,
-                fontWeight: 700, fontSize: 15, cursor: 'pointer',
-                fontFamily: 'var(--font-body)',
-                boxShadow: plan.popular ? `0 4px 20px rgba(255,153,51,0.25)` : 'none',
-                transition: 'box-shadow 0.3s',
-              }}
-            >
+            {/* Call to Action Button */}
+            <button className={`pricing-btn ${plan.popular ? 'pricing-btn-solid-family' : `pricing-btn-${plan.id === 'org' ? 'ghost-org' : 'solid-free'}`}`}>
               {plan.cta}
-            </motion.button>
+            </button>
+
           </motion.div>
         ))}
       </div>

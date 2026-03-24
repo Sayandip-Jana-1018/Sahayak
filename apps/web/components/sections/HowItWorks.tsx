@@ -1,178 +1,160 @@
 'use client';
 
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { Smartphone, Mic, LayoutDashboard } from 'lucide-react';
+import React, { useRef, useEffect, useState, CSSProperties } from 'react';
 import { useLocaleStore } from '@/store/localeStore';
+import { Smartphone, Mic, LayoutDashboard, ChevronRight } from 'lucide-react';
 
 const STEPS = [
-  { step: 1, titleKey: 'how.step1.title', descKey: 'how.step1.desc', icon: Smartphone, color: '#FF9933' },
-  { step: 2, titleKey: 'how.step2.title', descKey: 'how.step2.desc', icon: Mic, color: '#A855F7' },
-  { step: 3, titleKey: 'how.step3.title', descKey: 'how.step3.desc', icon: LayoutDashboard, color: '#22C55E' },
+  { 
+    step: 1, num: '01', titleKey: 'how.step1.title', descKey: 'how.step1.desc', 
+    Icon: Smartphone, accent: '#FF8C45', rgb: '255,140,69',
+    delayBase: 150
+  },
+  { 
+    step: 2, num: '02', titleKey: 'how.step2.title', descKey: 'how.step2.desc', 
+    Icon: Mic, accent: '#F0B429', rgb: '240,180,41',
+    delayBase: 400,
+  },
+  { 
+    step: 3, num: '03', titleKey: 'how.step3.title', descKey: 'how.step3.desc', 
+    Icon: LayoutDashboard, accent: '#FFF6EC', rgb: '255,246,236',
+    delayBase: 600
+  },
 ];
 
 export function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
-  const { t } = useLocaleStore();
+  const [inView, setInView] = useState(false);
+  const t = useLocaleStore((s) => s.t);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const rv = `hiw-reveal ${inView ? 'hiw-reveal--on' : ''}`;
+  const dl = (d: number): CSSProperties => ({ transitionDelay: `${d}ms` });
+  const cardStyle = (s: typeof STEPS[0]): CSSProperties => ({
+    '--hiw-accent': s.accent,
+    '--hiw-rgb': s.rgb,
+    ...dl(s.delayBase),
+  } as CSSProperties);
+
+  const Step1Icon = STEPS[0].Icon;
+  const Step2Icon = STEPS[1].Icon;
+  const Step3Icon = STEPS[2].Icon;
 
   return (
-    <section
-      ref={sectionRef}
-      id="how-it-works"
+    <section ref={sectionRef} id="how-it-works"
       style={{
+        position: 'relative',
         padding: 'clamp(80px, 10vw, 160px) 24px',
-        maxWidth: 1200,
-        margin: '0 auto',
+        background: 'transparent',
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
-        animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-        transition={{ duration: 0.8 }}
-        style={{ textAlign: 'center', marginBottom: 64 }}
-      >
-        <span className="section-heading" style={{
-          display: 'inline-block', padding: '5px 14px', borderRadius: 9999,
-          background: 'rgba(34,197,94,0.1)',
-          border: '1px solid rgba(34,197,94,0.15)',
-          color: '#22C55E', fontSize: 12, fontWeight: 600,
-          marginBottom: 16, fontFamily: 'var(--font-accent)',
-          letterSpacing: '0.06em', textTransform: 'uppercase',
-        }}>
-          {t('section.howItWorks')}
-        </span>
-        <h2 style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
-          fontWeight: 900, lineHeight: 1.1, fontStyle: 'italic',
-        }}>
-          {t('how.heading')}
-        </h2>
-      </motion.div>
-
-      {/* Asymmetric layout: Step 1 left big, Steps 2+3 right stacked */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gridTemplateRows: 'auto auto',
-        gap: 20,
-        position: 'relative',
-      }}>
-        {/* Step 1 — Large left card spanning 2 rows */}
-        <motion.div
-          className="glass-card section-card"
-          initial={{ opacity: 0, x: -40 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          style={{
-            gridRow: '1 / 3',
-            padding: 40,
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
-          {/* Large background number */}
-          <div style={{
-            position: 'absolute', top: 20, right: 24,
-            fontSize: 180, fontWeight: 900, fontFamily: 'var(--font-display)',
-            color: 'var(--text-primary)', opacity: 0.03,
-            lineHeight: 1, pointerEvents: 'none',
-          }}>
-            01
-          </div>
-
-          <div className="icon-container">
-            <Smartphone size={26} strokeWidth={1.5} style={{ color: STEPS[0].color }} />
-          </div>
-          <h3 style={{
-            fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900,
-            marginBottom: 12, color: STEPS[0].color, fontStyle: 'italic',
-          }}>
-            {t(STEPS[0].titleKey)}
-          </h3>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', maxWidth: 380 }}>
-            {t(STEPS[0].descKey)}
+      <div style={{ maxWidth: 1200, margin: '0 auto', background: 'transparent' }}>
+        
+        {/* ── Section Header ── */}
+        <div className={`hiw-header ${rv}`} style={dl(0)}>
+          <span className="hiw-pill-badge">
+            <span className="hiw-pulse-dot" />
+            HOW IT WORKS
+          </span>
+          <h2 className="hiw-heading">
+            Simple as <span className="hiw-heading-accent">1-2-3</span>
+          </h2>
+          <p className="hiw-subtitle">
+            Three steps. Any language. Any phone.
           </p>
-        </motion.div>
+        </div>
 
-        {/* Step 2 — Right top */}
-        <motion.div
-          className="glass-card section-card"
-          initial={{ opacity: 0, x: 40 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.45 }}
-          style={{ padding: 32, position: 'relative' }}
-        >
-          <div style={{
-            position: 'absolute', top: 12, right: 16,
-            fontSize: 80, fontWeight: 900, fontFamily: 'var(--font-display)',
-            color: 'var(--text-primary)', opacity: 0.03, lineHeight: 1, pointerEvents: 'none',
-          }}>
-            02
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-            <div className="icon-container" style={{ marginBottom: 0 }}>
-              <Mic size={22} strokeWidth={1.5} style={{ color: STEPS[1].color }} />
+        {/* ── Timeline Grid ── */}
+        <div className="hiw-timeline">
+          
+          {/* Step 1 */}
+          <div className={`hiw-card ${rv}`} style={cardStyle(STEPS[0])}>
+            <div className="hiw-card-shimmer" />
+            <div className="hiw-watermark">{STEPS[0].num}</div>
+            
+            <div className="hiw-step-badge" style={{ borderColor: `rgba(${STEPS[0].rgb}, 0.35)`, color: STEPS[0].accent }}>
+              {STEPS[0].num}
             </div>
-            <div>
-              <h3 style={{
-                fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700,
-                marginBottom: 8, color: STEPS[1].color,
-              }}>
-                {t(STEPS[1].titleKey)}
-              </h3>
-              <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)' }}>
-                {t(STEPS[1].descKey)}
-              </p>
+            
+            <div className="hiw-icon-box" style={{ background: `rgba(${STEPS[0].rgb}, 0.15)`, border: `1px solid rgba(${STEPS[0].rgb}, 0.35)` }}>
+              <Step1Icon size={22} style={{ color: STEPS[0].accent }} />
             </div>
+            
+            <h3 className="hiw-card-title" style={{ color: '#FFFFFF' }}>{t(STEPS[0].titleKey)}</h3>
+            <p className="hiw-card-desc">{t(STEPS[0].descKey)}</p>
           </div>
-        </motion.div>
 
-        {/* Step 3 — Right bottom */}
-        <motion.div
-          className="glass-card section-card"
-          initial={{ opacity: 0, x: 40 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          style={{ padding: 32, position: 'relative' }}
-        >
-          <div style={{
-            position: 'absolute', top: 12, right: 16,
-            fontSize: 80, fontWeight: 900, fontFamily: 'var(--font-display)',
-            color: 'var(--text-primary)', opacity: 0.03, lineHeight: 1, pointerEvents: 'none',
-          }}>
-            03
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-            <div className="icon-container" style={{ marginBottom: 0 }}>
-              <LayoutDashboard size={22} strokeWidth={1.5} style={{ color: STEPS[2].color }} />
-            </div>
-            <div>
-              <h3 style={{
-                fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700,
-                marginBottom: 8, color: STEPS[2].color,
-              }}>
-                {t(STEPS[2].titleKey)}
-              </h3>
-              <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)' }}>
-                {t(STEPS[2].descKey)}
-              </p>
+          {/* Connector 1 */}
+          <div className={`hiw-connector ${rv}`} style={dl(300)}>
+            <div className="hiw-conn-line">
+              <div className="hiw-conn-dot" />
+              <ChevronRight className="hiw-conn-chevron" size={16} />
             </div>
           </div>
-        </motion.div>
 
-        {/* Connecting line SVG */}
-        <svg
-          style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 60, height: '80%', pointerEvents: 'none', opacity: 0.15,
-          }}
-        >
-          <line x1="30" y1="0" x2="30" y2="100%" stroke="var(--sah-accent-1)" strokeWidth="1" strokeDasharray="4 6" />
-        </svg>
+          {/* Step 2 */}
+          <div className={`hiw-card ${rv}`} style={cardStyle(STEPS[1])}>
+            <div className="hiw-card-shimmer" />
+            <div className="hiw-watermark">{STEPS[1].num}</div>
+            
+            <div className="hiw-step-badge" style={{ borderColor: `rgba(${STEPS[1].rgb}, 0.35)`, color: STEPS[1].accent }}>
+              {STEPS[1].num}
+            </div>
+            
+            <div className="hiw-icon-box" style={{ background: `rgba(${STEPS[1].rgb}, 0.15)`, border: `1px solid rgba(${STEPS[1].rgb}, 0.35)` }}>
+              <Step2Icon size={22} style={{ color: STEPS[1].accent }} />
+            </div>
+            
+            <h3 className="hiw-card-title" style={{ color: '#FFFFFF' }}>{t(STEPS[1].titleKey)}</h3>
+            <div className="hiw-card-desc hiw-quote-card">
+              &quot;मुझे दर्द हो रहा है, क्या करूँ?&quot;
+            </div>
+            <p className="hiw-card-desc" style={{ marginTop: 8 }}>{t(STEPS[1].descKey)}</p>
+          </div>
+
+          {/* Connector 2 */}
+          <div className={`hiw-connector ${rv}`} style={dl(500)}>
+            <div className="hiw-conn-line">
+              <div className="hiw-conn-dot" />
+              <ChevronRight className="hiw-conn-chevron" size={16} />
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className={`hiw-card ${rv}`} style={cardStyle(STEPS[2])}>
+            <div className="hiw-card-shimmer" />
+            <div className="hiw-watermark">{STEPS[2].num}</div>
+            
+            <div className="hiw-step-badge" style={{ borderColor: `rgba(${STEPS[2].rgb}, 0.35)`, color: STEPS[2].accent }}>
+              {STEPS[2].num}
+            </div>
+            
+            <div className="hiw-icon-box" style={{ background: `rgba(${STEPS[2].rgb}, 0.15)`, border: `1px solid rgba(${STEPS[2].rgb}, 0.35)` }}>
+              <Step3Icon size={22} style={{ color: STEPS[2].accent }} />
+            </div>
+            
+            <h3 className="hiw-card-title" style={{ color: '#FFFFFF' }}>{t(STEPS[2].titleKey)}</h3>
+            <p className="hiw-card-desc">{t(STEPS[2].descKey)}</p>
+          </div>
+        </div>
+
+        {/* ── Progress Indicator ── */}
+        <div className={`hiw-progress-wrap ${rv}`} style={dl(800)}>
+          <div className="hiw-progress-track">
+            <div className="hiw-progress-fill" />
+          </div>
+        </div>
+
       </div>
     </section>
   );

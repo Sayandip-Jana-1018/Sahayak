@@ -271,15 +271,7 @@ function CinematicPhone() {
 
 useGLTF.preload(MODEL_PATH);
 
-/* ── Floating badges data ── */
-const FLOATING_BADGES = [
-  { label: '🌐 11 Languages', top: '18%', right: '4%', delay: '0s' },
-  { label: '🤖 AI Companion', top: '38%', right: '2%', delay: '0.4s' },
-  { label: '🆘 SOS Alerts', bottom: '32%', right: '3%', delay: '0.8s' },
-  { label: '💊 Med Reminders', bottom: '14%', right: '6%', delay: '1.2s' },
-];
-
-/* ── PhoneScene: Fixed full-viewport Canvas + floating badges ── */
+/* ── PhoneScene: Fixed full-viewport Canvas ── */
 export function PhoneScene() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); updateMetrics(); }, []);
@@ -315,23 +307,6 @@ export function PhoneScene() {
           <Environment preset="city" />
         </Suspense>
       </Canvas>
-
-      {/* Floating language/feature badges with CSS bobbing */}
-      {FLOATING_BADGES.map((badge, i) => (
-        <div
-          key={i}
-          className="phone-floating-badge"
-          style={{
-            position: 'absolute',
-            top: badge.top,
-            right: badge.right,
-            bottom: badge.bottom,
-            animationDelay: badge.delay,
-          }}
-        >
-          {badge.label}
-        </div>
-      ))}
     </div>
   );
 }
