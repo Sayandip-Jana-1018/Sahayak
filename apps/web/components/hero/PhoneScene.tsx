@@ -114,15 +114,7 @@ function IPhone() {
 
 useGLTF.preload(MODEL_PATH);
 
-/* ── Floating Badges — DOM, CSS bobbing, visible only in hero ── */
-const BADGES = [
-  { label: '🌐 11 Languages', delay: '0s', top: '28%' },
-  { label: '🤖 AI Companion', delay: '0.6s', top: '42%' },
-  { label: '🆘 SOS Alerts', delay: '1.1s', top: '56%' },
-  { label: '💊 Med Reminders', delay: '1.7s', top: '70%' },
-];
-
-/* ── Main Export ── */
+/* ── PhoneScene: Fixed full-viewport Canvas ── */
 export function PhoneScene() {
   const [mounted, setMounted] = useState(false);
   const badgesRef = useRef<HTMLDivElement>(null);
@@ -166,32 +158,6 @@ export function PhoneScene() {
         </Suspense>
       </Canvas>
 
-      {/* Floating badges — hero only, fade on scroll */}
-      <div
-        ref={badgesRef}
-        style={{
-          position: 'absolute',
-          right: '3%',
-          top: 0,
-          height: '100%',
-          pointerEvents: 'none',
-        }}
-      >
-        {BADGES.map((b, i) => (
-          <div
-            key={i}
-            className="phone-floating-badge"
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: b.top,
-              animationDelay: b.delay,
-            }}
-          >
-            {b.label}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

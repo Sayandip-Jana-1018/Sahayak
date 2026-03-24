@@ -3,26 +3,19 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 
-const FOOTER_LINKS = {
-  Product: [
-    { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '#pricing' },
-    { label: 'Voice Demo', href: '#voice-demo' },
-    { label: 'Languages', href: '#languages' },
-  ],
-  Company: [
-    { label: 'About Us', href: '#' },
-    { label: 'Blog', href: '#' },
-    { label: 'Careers', href: '#' },
-    { label: 'Press Kit', href: '#' },
-  ],
-  Support: [
-    { label: 'Help Center', href: '#' },
-    { label: 'Contact', href: '#' },
-    { label: 'Privacy Policy', href: '#' },
-    { label: 'Terms of Service', href: '#' },
-  ],
-};
+const PRODUCT_LINKS = [
+  { label: 'Features', href: '#features' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'Voice Demo', href: '#voice-demo' },
+  { label: 'Languages', href: '#languages' },
+];
+
+const SUPPORT_LINKS = [
+  { label: 'Help Center', href: '#' },
+  { label: 'Contact', href: '#' },
+  { label: 'Privacy Policy', href: '#' },
+  { label: 'Terms of Service', href: '#' },
+];
 
 const SOCIAL_LINKS = [
   { label: 'Twitter', icon: '𝕏', href: '#' },
@@ -40,143 +33,126 @@ export function Footer() {
   };
 
   return (
-    <footer
-      ref={sectionRef}
-      style={{
-        padding: 'clamp(60px, 8vw, 120px) 24px 32px',
-        maxWidth: 1200,
-        margin: '0 auto',
-        borderTop: '1px solid var(--glass-border)',
-      }}
-    >
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 48,
-          marginBottom: 64,
-        }}
-      >
-        {/* Brand column */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 28 }}>🙏</span>
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22 }}>सहायक</span>
-          </div>
-          <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)', maxWidth: 280 }}>
-            India&apos;s first voice-driven AI assistant for elderly smartphones. Because every elder deserves dignity in the digital age.
-          </p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-            {SOCIAL_LINKS.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                aria-label={social.label}
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  background: 'var(--glass-bg)',
-                  border: '1px solid var(--glass-border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  transition: 'background 0.2s, border-color 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,158,44,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255,158,44,0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                }}
-              >
-                {social.icon}
-              </a>
-            ))}
-          </div>
-        </motion.div>
+    <>
+      {/* India-flag gradient separator */}
+      <div className="sah-footer-separator" />
 
-        {/* Link columns */}
-        {Object.entries(FOOTER_LINKS).map(([title, links], i) => (
-          <motion.div
-            key={title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: i * 0.1 + 0.1 }}
-          >
-            <h4 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>{title}</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {links.map((link) => (
-                <li key={link.label}>
+      <footer ref={sectionRef} className="sah-footer">
+        {/* Background glow blobs */}
+        <div className="sah-footer-blob-left" />
+        <div className="sah-footer-blob-right" />
+
+        <div className="sah-footer-inner">
+          {/* 3-Column: Product | Brand Center | Support */}
+          <div className="sah-footer-grid">
+
+            {/* LEFT — Product Links */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5 }}
+            >
+              <h4 className="sah-footer-col-title">Product</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {PRODUCT_LINKS.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="sah-footer-link">{link.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* CENTER — Brand */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              style={{ textAlign: 'center' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 36 }}>🙏</span>
+                <span className="sah-footer-logo" style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 28 }}>सहायक</span>
+              </div>
+              {/* Warm amber underline accent */}
+              <div style={{ width: 40, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #F59E0B, #EA580C)', margin: '0 auto 20px' }} />
+
+              <p className="sah-footer-tagline" style={{ fontSize: 14, lineHeight: 1.7, maxWidth: 320, margin: '0 auto' }}>
+                India&apos;s first voice-driven AI assistant for elderly smartphones. Because every elder deserves dignity in the digital age.
+              </p>
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'center' }}>
+                {SOCIAL_LINKS.map((social) => (
                   <a
-                    href={link.href}
-                    style={{
-                      color: 'inherit',
-                      textDecoration: 'none',
-                      fontSize: 14,
-                      opacity: 0.5,
-                      transition: 'opacity 0.2s',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                    key={social.label}
+                    href={social.href}
+                    aria-label={social.label}
+                    className="sah-footer-social"
                   >
-                    {link.label}
+                    {social.icon}
                   </a>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        ))}
-      </div>
+                ))}
+              </div>
 
-      {/* Bottom bar */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: 24,
-          borderTop: '1px solid var(--glass-border)',
-          flexWrap: 'wrap',
-          gap: 12,
-        }}
-      >
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          © {new Date().getFullYear()} Sahayak. Made with ❤️ in India.
-        </p>
+              {/* Mini CTA */}
+              <div style={{ marginTop: 28 }}>
+                <p className="sah-footer-cta-text" style={{ fontSize: 13, marginBottom: 12 }}>
+                  Start for free. No credit card needed.
+                </p>
+                <a href="#pricing" className="sah-footer-cta-btn">
+                  Get Started →
+                </a>
+              </div>
+            </motion.div>
 
-        <button
-          onClick={scrollToTop}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'var(--glass-bg)',
-            border: '1px solid var(--glass-border)',
-            padding: '8px 16px',
-            borderRadius: 9999,
-            color: 'inherit',
-            fontSize: 13,
-            cursor: 'pointer',
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-          aria-label="Scroll to top"
-        >
-          ↑ Back to top
-        </button>
-      </div>
-    </footer>
+            {/* RIGHT — Support Links */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              style={{ textAlign: 'right' }}
+            >
+              <h4 className="sah-footer-col-title">Support</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {SUPPORT_LINKS.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="sah-footer-link">{link.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+          </div>
+
+          {/* Bottom copyright bar */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: 24,
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <p className="sah-footer-copyright" style={{ fontSize: 13 }}>
+              © {new Date().getFullYear()} Sahayak. Made with ❤️ in India.
+            </p>
+
+            <button
+              onClick={scrollToTop}
+              className="sah-footer-top-btn"
+              aria-label="Scroll to top"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
+              Back to top
+            </button>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }

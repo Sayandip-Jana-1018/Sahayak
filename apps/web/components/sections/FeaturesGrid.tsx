@@ -1,97 +1,187 @@
 'use client';
 
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useRef, useEffect, useState } from 'react';
 import { useLocaleStore } from '@/store/localeStore';
-import {
-  Mic, Pill, AlertTriangle, Bot, Landmark,
-  LayoutDashboard, Scan, IndianRupee, Globe,
-} from 'lucide-react';
+import { Mic, Pill, AlertTriangle, Bot, Landmark, LayoutDashboard } from 'lucide-react';
 
-const FEATURES = [
-  { title: 'Voice Commands', description: 'Natural language processing in 11 Indian languages with elderly speech pattern recognition.', icon: Mic, color: 'var(--sah-accent-1)' },
-  { title: 'Med Scan & Remind', description: 'Photograph a prescription. AI reads it and auto-sets voice reminders.', icon: Pill, color: '#F59E0B' },
-  { title: 'SOS Emergency', description: 'Triple-tap, shake, or say "bachao" for instant family alerts with GPS.', icon: AlertTriangle, color: '#F43F5E' },
-  { title: 'AI Companion', description: '"Dost" — an empathetic AI friend for daily conversations and loneliness detection.', icon: Bot, color: 'var(--sah-accent-2)' },
-  { title: 'Scheme Finder', description: 'Discover eligible government welfare schemes based on profile data.', icon: Landmark, color: '#2D6A4F' },
-  { title: 'Family Dashboard', description: 'Real-time caregiver monitoring: meds, location, battery, SOS history.', icon: LayoutDashboard, color: 'var(--sah-accent-1)' },
-  { title: 'Emotion Detection', description: 'Camera-based facial analysis detects confusion and auto-simplifies the UI.', icon: Scan, color: '#A855F7' },
-  { title: 'Simplified UPI', description: 'Voice-first payment flow: "Ramesh ko 500 rupaye bhejo" — done.', icon: IndianRupee, color: '#F59E0B' },
-  { title: 'Multi-Language', description: 'Full UI and voice support across Hindi, Tamil, Bengali, Marathi, and 7 more.', icon: Globe, color: '#2D6A4F' },
+/* ── Bubble data ─────────────────────────────────────────── */
+const BUBBLES = [
+  { key: 'voice', title: 'Voice Commands', desc: 'Natural speech in 11 Indian languages with dialect recognition.', stat: '11 languages', Icon: Mic, accent: '#FFB432', rgb: '255,180,50', size: 190, left: 8, top: 8, depth: 1 },
+  { key: 'med', title: 'Med Scan', desc: 'Camera prescription scan with auto voice reminders.', stat: '65% miss doses', Icon: Pill, accent: '#FF7850', rgb: '255,120,80', size: 185, left: 60, top: 2, depth: 1.05 },
+  { key: 'sos', title: 'SOS Emergency', desc: 'Triple-tap, shake, or say "bachao" for instant alerts.', stat: '< 10s response', Icon: AlertTriangle, accent: '#FF5050', rgb: '255,80,80', size: 195, left: 80, top: 24, depth: 1.05 },
+  { key: 'companion', title: 'AI Companion', desc: '"Dost" — empathetic AI that chats and detects loneliness.', stat: '24/7 available', Icon: Bot, accent: '#82C8FF', rgb: '130,200,255', size: 180, left: 70, top: 58, depth: 1 },
+  { key: 'scheme', title: 'Scheme Finder', desc: 'Eligible government schemes explained in simple Hindi.', stat: '500+ schemes', Icon: Landmark, accent: '#64DC96', rgb: '100,220,150', size: 175, left: 36, top: 62, depth: 0.95 },
+  { key: 'family', title: 'Family Dashboard', desc: 'Real-time monitoring: meds, location, battery, SOS.', stat: 'Live tracking', Icon: LayoutDashboard, accent: '#B482FF', rgb: '180,130,255', size: 185, left: 3, top: 50, depth: 0.95 },
 ];
 
+const CENTER = { left: 38, top: 24, size: 240 };
+
+/* ── Connector geometry helper ───────────────────────────── */
+function connectorStyle(b: typeof BUBBLES[0], fieldW: number, fieldH: number) {
+  const cx = (CENTER.left / 100) * fieldW + CENTER.size / 2;
+  const cy = (CENTER.top / 100) * fieldH + CENTER.size / 2;
+  const bx = (b.left / 100) * fieldW + b.size / 2;
+  const by = (b.top / 100) * fieldH + b.size / 2;
+  const dx = bx - cx;
+  const dy = by - cy;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  return { len, angle, cx, cy };
+}
+
+/* ── Component ───────────────────────────────────────────── */
 export function FeaturesGrid() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, amount: 0.15 });
-  const { t } = useLocaleStore();
+  const ref = useRef<HTMLElement>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  const t = useLocaleStore((s) => s.t);
+
+  /* Field size for connector geometry — measured once */
+  const fieldSize = { w: 1200, h: 900 };
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
+      { threshold: 0.08 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const rv = () => `orb-reveal ${inView ? 'orb-reveal--on' : ''}`;
+  const dl = (d: number): React.CSSProperties => ({ transitionDelay: `${d}ms` });
 
   return (
-    <section
-      ref={sectionRef}
-      id="features"
-      style={{
-        padding: 'clamp(80px, 10vw, 160px) 24px',
-        maxWidth: 1200,
-        margin: '0 auto',
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
-        animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-        style={{ textAlign: 'center', marginBottom: 64 }}
-      >
-        <span className="section-heading" style={{
-          display: 'inline-block', padding: '5px 14px', borderRadius: 9999,
-          background: 'rgba(var(--sah-accent-1-rgb),0.1)',
-          border: '1px solid rgba(var(--sah-accent-1-rgb),0.15)',
-          color: 'var(--sah-accent-1)', fontSize: 12, fontWeight: 600,
-          marginBottom: 16, fontFamily: 'var(--font-accent)',
-          letterSpacing: '0.06em', textTransform: 'uppercase',
-        }}>
-          {t('section.features')}
-        </span>
-        <h2 style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)',
-          fontWeight: 900, lineHeight: 1.1, }}>
-          {t('features.heading')}
-        </h2>
-      </motion.div>
+    <section ref={ref} id="features"
+      style={{ position: 'relative', padding: '80px 0 60px', overflow: 'visible', background: 'transparent' }}>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: 16,
-      }}>
-        {FEATURES.map((feature, i) => {
-          const Icon = feature.icon;
-          return (
-            <motion.div
-              key={feature.title}
-              className="glass-card section-card"
-              initial={{ opacity: 0, y: 40, scale: 0.96 }}
-              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.06 + 0.2, ease: 'easeOut' }}
-              style={{ padding: 28, cursor: 'default' }}
-            >
-              <div className="icon-container">
-                <Icon size={26} strokeWidth={1.5} style={{ color: feature.color }} />
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: 1200, margin: '0 auto', padding: '0 24px', background: 'transparent' }}>
+
+        {/* ── Pill badge ── */}
+        <div className={`orb-header ${rv()}`} style={dl(0)}>
+          <span className="orb-pill-badge">
+            <span className="orb-pulse-dot" />
+            FEATURES
+          </span>
+        </div>
+
+        {/* ── Section heading — ALWAYS visible above constellation ── */}
+        <h2 className={`orb-section-heading ${rv()}`} style={dl(80)}>
+          Everything an <span className="orb-heading-accent">elder needs</span>
+        </h2>
+
+        {/* ═══ ORBITAL FIELD (desktop) ═══ */}
+        <div className="orb-field" ref={fieldRef}>
+
+          {/* CSS-based connector lines */}
+          {BUBBLES.map((b, i) => {
+            const { len, angle, cx, cy } = connectorStyle(b, fieldSize.w, fieldSize.h);
+            return (
+              <div key={`conn-${b.key}`}
+                className={`orb-connector ${inView ? 'orb-connector--on' : ''}`}
+                style={{
+                  left: cx,
+                  top: cy,
+                  width: len,
+                  transform: `rotate(${angle}deg)`,
+                  background: `linear-gradient(to right, rgba(${b.rgb},0.5), rgba(${b.rgb},0.08))`,
+                  transitionDelay: `${300 + i * 100}ms`,
+                  '--conn-accent': b.accent,
+                  '--conn-rgb': b.rgb,
+                } as React.CSSProperties}
+              />
+            );
+          })}
+
+          {/* Central hero orb */}
+          <div className={`orb-hero ${rv()}`}
+            style={{ left: `${CENTER.left}%`, top: `${CENTER.top}%`, width: CENTER.size, height: CENTER.size, ...dl(100) }}>
+            <div className="orb-hero-glow" />
+            <div className="orb-hero-content">
+              <span className="orb-hero-hindi">सहायक</span>
+              <span className="orb-hero-ai">AI</span>
+              {/* 2 sonar ripple rings */}
+              <div className="orb-sonar-ring orb-sonar-ring--1" />
+              <div className="orb-sonar-ring orb-sonar-ring--2" />
+            </div>
+          </div>
+
+          {/* Feature bubbles */}
+          {BUBBLES.map((b, i) => {
+            const isSOS = b.key === 'sos';
+            return (
+              <div key={b.key}
+                className={`orb-bubble ${isSOS ? 'orb-bubble--sos' : ''} ${rv()}`}
+                style={{
+                  left: `${b.left}%`, top: `${b.top}%`,
+                  width: b.size, height: b.size,
+                  '--orb-accent': b.accent,
+                  '--orb-rgb': b.rgb,
+                  transform: `scale(${b.depth})`,
+                  opacity: b.depth < 1 ? 0.85 : 1,
+                  ...dl(180 + i * 80),
+                } as React.CSSProperties}
+              >
+                <div className="orb-bubble-glow" style={{
+                  background: `radial-gradient(circle at center, rgba(${b.rgb},0.35) 0%, transparent 65%)`,
+                }} />
+                <div className="orb-bubble-specular" />
+
+                {isSOS && (
+                  <div className="orb-live-badge">
+                    <span className="orb-live-dot" />LIVE
+                  </div>
+                )}
+
+                <div className="orb-bubble-inner">
+                  <div className="orb-bubble-icon" style={{
+                    background: `rgba(${b.rgb},0.15)`,
+                    border: `1px solid rgba(${b.rgb},0.35)`,
+                  }}>
+                    <b.Icon size={24} strokeWidth={1.5} style={{ color: b.accent }} />
+                  </div>
+                  <h3 className="orb-bubble-title">{b.title}</h3>
+                  <p className="orb-bubble-desc">{b.desc}</p>
+                </div>
+
+                <div className="orb-tooltip" style={{ borderColor: `rgba(${b.rgb},0.4)` }}>
+                  <span style={{ color: b.accent }}>{b.stat}</span>
+                </div>
               </div>
-              <h3 style={{
-                fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700,
-                marginBottom: 8, color: 'var(--text-primary)',
-              }}>
-                {feature.title}
-              </h3>
-              <p style={{
-                fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)',
-                fontFamily: 'var(--font-body)',
-              }}>
-                {feature.description}
-              </p>
-            </motion.div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {/* ═══ MOBILE FALLBACK ═══ */}
+        <div className="orb-mobile-grid">
+          {BUBBLES.map((b, i) => {
+            const isSOS = b.key === 'sos';
+            return (
+              <div key={b.key}
+                className={`orb-mob-card ${isSOS ? 'orb-mob-card--sos' : ''} ${rv()}`}
+                style={dl(i * 80)}
+              >
+                <div className="orb-mob-glow" style={{
+                  background: `radial-gradient(circle, rgba(${b.rgb},0.2) 0%, transparent 70%)`,
+                }} />
+                {isSOS && (
+                  <div className="orb-live-badge orb-live-badge--mob"><span className="orb-live-dot" />LIVE</div>
+                )}
+                <div className="orb-bubble-icon orb-mob-icon" style={{
+                  background: `rgba(${b.rgb},0.15)`,
+                  border: `1px solid rgba(${b.rgb},0.35)`,
+                }}>
+                  <b.Icon size={22} strokeWidth={1.5} style={{ color: b.accent }} />
+                </div>
+                <h3 className="orb-bubble-title">{b.title}</h3>
+                <p className="orb-bubble-desc">{b.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );
