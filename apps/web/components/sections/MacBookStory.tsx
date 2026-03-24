@@ -75,8 +75,37 @@ export function MacBookStory() {
     <div
       ref={containerRef}
       id="macbook-story"
-      style={{ height: '500vh', position: 'relative' }}
+      style={{ height: '350vh', position: 'relative' }}
     >
+      {/* ─── ISOLATED BACKGROUND LAYER FOR RIPPLES (Fixes Canvas Overlap) ─── */}
+      <div style={{ position: 'sticky', top: 0, height: '100svh', zIndex: -10, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', top: '55%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100vw', height: 400,
+          perspective: 1000,
+        }}>
+          <style>{`
+            @keyframes mac-ripple-expand {
+              0% { transform: translate(-50%, -50%) rotateX(75deg) scale(0.2); opacity: 0.6; border-width: 4px; }
+              100% { transform: translate(-50%, -50%) rotateX(75deg) scale(4); opacity: 0; border-width: 1px; }
+            }
+            .mac-ripple-circle {
+              position: absolute; top: 50%; left: 50%;
+              border-radius: 50%;
+              border-style: solid;
+              border-color: var(--sah-accent-1);
+              animation: mac-ripple-expand 6s cubic-bezier(0.1, 0.4, 0.3, 1) infinite;
+            }
+          `}</style>
+          <div className="mac-ripple-circle" style={{ width: 400, height: 400, animationDelay: '0s' }} />
+          <div className="mac-ripple-circle" style={{ width: 400, height: 400, animationDelay: '1.2s' }} />
+          <div className="mac-ripple-circle" style={{ width: 400, height: 400, animationDelay: '2.4s' }} />
+          <div className="mac-ripple-circle" style={{ width: 400, height: 400, animationDelay: '3.6s' }} />
+          <div className="mac-ripple-circle" style={{ width: 400, height: 400, animationDelay: '4.8s' }} />
+        </div>
+      </div>
+
       {/* Sticky overlay — only shows captions + progress bar */}
       <div style={{
         position: 'sticky',
@@ -88,8 +117,8 @@ export function MacBookStory() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-end',
-        paddingBottom: '4vh',
       }}>
+
         {/* Caption block */}
         <div
           ref={captionBoxRef}

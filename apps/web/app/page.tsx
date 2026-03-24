@@ -30,7 +30,7 @@ export default function HomePage() {
       {/* Fixed MacBook canvas — shows during hero + story zones */}
       <MacBookScene />
 
-      {/* Zone 1: Hero — left text, right column reserved for MacBook canvas */}
+      {/* Zone 1: Hero — text above + terminal in MacBook placeholder area */}
       <HeroSection />
 
       {/* Zone 2: MacBook scroll story — 500vh spacer + scroll-driven captions */}

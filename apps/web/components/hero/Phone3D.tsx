@@ -6,7 +6,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, Environment, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 
-const MODEL_PATH = '/models/iphone_model.glb';
+const MODEL_PATH = '/models/phone.glb';
 
 /* ── iPhone 3D Model ── */
 function IPhoneModel({ videoSrc }: { videoSrc?: string }) {
@@ -57,7 +57,7 @@ function IPhoneModel({ videoSrc }: { videoSrc?: string }) {
     video.playsInline = true;
     video.autoplay = true;
     video.play().catch(() => {
-      setTimeout(() => video.play().catch(() => {}), 1000);
+      setTimeout(() => video.play().catch(() => { }), 1000);
     });
 
     const tex = new THREE.VideoTexture(video);

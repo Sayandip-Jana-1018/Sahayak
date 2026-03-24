@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
-import { Syne, DM_Sans, Open_Sans } from 'next/font/google';
+import { Syne, DM_Sans, Open_Sans, Caveat } from 'next/font/google';
+import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from 'next-themes';
 import { LenisProvider } from '@/providers/lenis-provider';
 import { SoundProvider } from '@/providers/sound-provider';
+import { QueryProvider } from '@/providers/query-provider';
 import { ToastProvider } from '@sahayak/ui';
 import { Grainient } from '@/components/ui/Grainient';
 import { CustomCursor } from '@/components/ui/CustomCursor';
@@ -29,6 +31,13 @@ const syne = Syne({
   variable: '--font-accent',
   display: 'swap',
   weight: ['400', '500', '600', '700', '800'],
+});
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  variable: '--font-caveat',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -77,38 +86,42 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${openSans.variable} ${dmSans.variable} ${syne.variable}`}
-        style={{
-          fontFamily: 'var(--font-body)',
-          minHeight: '100vh',
-          overflowX: 'hidden',
-          position: 'relative',
-        }}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange={false}
-          storageKey="sahayak-theme"
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`${openSans.variable} ${dmSans.variable} ${syne.variable} ${caveat.variable}`}
+          style={{
+            fontFamily: 'var(--font-body)',
+            minHeight: '100vh',
+            overflowX: 'hidden',
+            position: 'relative',
+          }}
         >
-          <SoundProvider>
-            <LenisProvider>
-              <ToastProvider>
-                <Grainient />
-                <BackgroundOrbs />
-                <CustomCursor />
-                <Navbar />
-                <main id="main-content" style={{ position: 'relative', zIndex: 1 }}>
-                  {children}
-                </main>
-              </ToastProvider>
-            </LenisProvider>
-          </SoundProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange={false}
+            storageKey="sahayak-theme"
+          >
+            <QueryProvider>
+              <SoundProvider>
+                <LenisProvider>
+                  <ToastProvider>
+                    <Grainient />
+                    <BackgroundOrbs />
+                    <CustomCursor />
+                    <Navbar />
+                    <main id="main-content" style={{ position: 'relative', zIndex: 1 }}>
+                      {children}
+                    </main>
+                  </ToastProvider>
+                </LenisProvider>
+              </SoundProvider>
+            </QueryProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

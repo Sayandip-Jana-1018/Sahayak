@@ -191,27 +191,31 @@ function MacBook3D() {
     // This gives the text plenty of room above it
     const bob = Math.sin(t * 0.7) * 0.03 - 0.4; // Base Y is -0.4
 
-    /* ─── HERO ZONE ─── */
-    if (gScrollY < heroH) {
-      groupRef.current.position.set(0, bob, 0);
-      groupRef.current.scale.setScalar(0.68); // slightly larger
-      groupRef.current.visible = true;
-      prevScale.current = 0.68;
-      prevY.current = bob;
+    /* ─── HERO ZONE ─── hide MacBook — terminal is showing ─── */
+    // Trigger story zone slightly earlier (20% of hero height) so MacBook cross-fades with fading terminal
+    const storyStartY = heroH * 0.8;
 
+    if (gScrollY < storyStartY) {
+      groupRef.current.visible = false;
+      setGroupOpacity(cloned, 0);
       if (pivotRef.current) {
-        prevLidAngle.current = lerp(prevLidAngle.current, LID_CLOSED, 0.08);
-        pivotRef.current.rotation.x = prevLidAngle.current;
+        pivotRef.current.rotation.x = LID_CLOSED;
       }
-
-      setGroupOpacity(cloned, 1);
+      prevLidAngle.current = LID_CLOSED;
+      prevScale.current = 0.0;
+      prevY.current = bob;
       return;
     }
 
     /* ─── STORY ZONE ─── */
-    const rawSP = gScrollY - heroH;
+    const rawSP = gScrollY - storyStartY;
     if (rawSP < storyH) {
       const sp = clamp(rawSP / storyH, 0, 1);
+
+      // Fade in: 0→3% of story, scale from 0 to 0.68
+      const fadeInP = ease(norm(sp, 0, 0.03));
+      const baseScale = lerp(0.0, 0.68, fadeInP);
+      const baseOpacity = fadeInP;
 
       // Open phase 0→25%
       const openP = ease(norm(sp, 0, 0.25));
@@ -220,12 +224,13 @@ function MacBook3D() {
       if (pivotRef.current) pivotRef.current.rotation.x = prevLidAngle.current;
 
       // Scale 0.68 → 0.85
-      const targetScale = lerp(0.68, 0.85, ease(norm(sp, 0, 0.30)));
+      const targetScale = lerp(baseScale, 0.85, ease(norm(sp, 0.08, 0.30)));
       prevScale.current = lerp(prevScale.current, targetScale, 0.08);
 
       // Push up from -0.4 to center screen for the story view
       const targetY = lerp(bob, bob + 0.8, ease(norm(sp, 0, 0.20)));
       prevY.current = lerp(prevY.current, targetY, 0.1);
+
 
       // Close + shrink 65→85%
       const closeP = ease(norm(sp, 0.65, 0.85));

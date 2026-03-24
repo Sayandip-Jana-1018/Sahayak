@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, useSpring } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -59,26 +59,27 @@ const LANGUAGES: { code: Locale; label: string; flag: string }[] = [
   { code: 'ur', label: 'اردو', flag: '🇮🇳' },
 ];
 
-/* ── Glassmorphic dropdown style helper ── */
 const dropdownStyle = (isDark: boolean): React.CSSProperties => ({
   position: 'absolute', top: '100%', right: 0, marginTop: 12,
-  background: isDark ? 'rgba(10, 10, 20, 0.92)' : 'rgba(255, 251, 240, 0.95)',
-  backdropFilter: 'blur(30px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+  background: isDark
+    ? 'rgba(10, 12, 18, 0.82)'
+    : 'rgba(255, 251, 240, 0.90)',
+  backdropFilter: 'blur(32px) saturate(200%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(200%)',
   borderRadius: 16,
-  border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(27,42,74,0.1)'}`,
+  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(27, 42, 74, 0.12)'}`,
   padding: 6, zIndex: 100,
   boxShadow: isDark
-    ? '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset'
-    : '0 20px 60px rgba(27,42,74,0.1), 0 0 0 1px rgba(255,255,255,0.6) inset',
+    ? '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06) inset'
+    : '0 20px 60px rgba(27,42,74,0.15), 0 0 0 1px rgba(255,255,255,0.8) inset',
 });
 
 /* ── Icon button style ── */
-const iconBtnStyle = (isDark: boolean): React.CSSProperties => ({
+const iconBtnStyle = (isDark: boolean, color?: string): React.CSSProperties => ({
   background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(27,42,74,0.04)',
   border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(27,42,74,0.06)'}`,
   padding: '7px 8px', borderRadius: 10, cursor: 'pointer',
-  color: 'var(--text-secondary)', lineHeight: 1,
+  color: color || 'var(--text-secondary)', lineHeight: 1,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   transition: 'background 0.2s, border-color 0.2s, color 0.2s',
 });
@@ -88,11 +89,13 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isColorOpen, setIsColorOpen] = useState(false);
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const { setTheme: setDarkLight, resolvedTheme } = useTheme();
   const { activeTheme, setTheme: setColorTheme } = useThemeStore();
   const { locale, setLocale, t } = useLocaleStore();
   const [mounted, setMounted] = useState(false);
-  const { scrollY } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
@@ -138,22 +141,35 @@ export function Navbar() {
           pointerEvents: 'none',
         }}
       >
+        {/* ── Global Scroll Progress Bar (Tiranga) ── */}
+        <motion.div
+          style={{
+            position: 'absolute', top: -14, left: 0, right: 0, height: 3,
+            originX: 0, scaleX,
+            background: isDark
+              ? 'linear-gradient(90deg, #FF9933 0%, rgba(255,255,255,0.8) 50%, #138808 100%)'
+              : 'linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)',
+            boxShadow: isDark ? '0 0 10px rgba(255,153,51,0.5)' : 'none',
+            zIndex: 9999,
+          }}
+        />
+
         {/* ── Glassmorphic Pill ── */}
         <div
           className="navbar-pill"
           style={{
             pointerEvents: 'all',
-            maxWidth: 900,
-            width: 'calc(100% - 40px)',
+            maxWidth: 980,
+            width: 'calc(100% - 32px)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            gap: 8, padding: '8px 16px',
+            gap: 6, padding: '8px 14px',
             borderRadius: 20,
             background: isScrolled
-              ? isDark ? 'rgba(10, 10, 20, 0.88)' : 'rgba(255, 251, 240, 0.92)'
-              : isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.4)',
-            backdropFilter: 'blur(28px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(27,42,74,0.06)'}`,
+              ? isDark ? 'rgba(10, 10, 20, 0.65)' : 'rgba(255, 255, 255, 0.70)'
+              : isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(32px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(27,42,74,0.06)'}`,
             boxShadow: isScrolled
               ? isDark
                 ? '0 8px 40px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset'
@@ -191,36 +207,43 @@ export function Navbar() {
             }}>सहायक</span>
           </Link>
 
-          {/* CENTER: Nav Links with colored icons */}
-          <div className="navbar-links-center" style={{
+          {/* CENTER: Nav Links with colored icons & sliding pill */}
+          <div className="navbar-links-center" onMouseLeave={() => setHoveredNav(null)} style={{
             flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2,
           }}>
             {NAV_LINKS.map((link) => {
               const Icon = link.icon;
+              const isHovered = hoveredNav === link.key;
               return (
                 <button
                   key={link.href}
                   onClick={() => scrollTo(link.href)}
+                  onMouseEnter={() => setHoveredNav(link.key)}
                   style={{
+                    position: 'relative',
                     background: 'none', border: 'none',
-                    padding: '6px 10px', borderRadius: 10,
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    color: 'var(--text-secondary)', fontSize: 12.5, fontWeight: 500,
-                    cursor: 'pointer', transition: 'all 0.2s',
+                    padding: '6px 10px', borderRadius: 12,
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    color: link.color, /* FIX: User requested always colorful menus */
+                    fontSize: 12.5, fontWeight: 700,
+                    cursor: 'pointer', transition: 'transform 0.2s',
                     fontFamily: 'var(--font-body)', whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = link.color;
-                    e.currentTarget.style.background = isDark
-                      ? 'rgba(255,255,255,0.06)' : 'rgba(27,42,74,0.04)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'var(--text-secondary)';
-                    e.currentTarget.style.background = 'none';
-                  }}
                 >
-                  <span style={{ color: link.color, display: 'flex' }}><Icon /></span>
-                  {t(link.key)}
+                  {isHovered && (
+                    <motion.div
+                      layoutId="nav-pill"
+                      style={{
+                        position: 'absolute', inset: 0,
+                        background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(27,42,74,0.06)',
+                        borderRadius: 12,
+                        zIndex: 0,
+                      }}
+                      transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                    />
+                  )}
+                  <span style={{ position: 'relative', zIndex: 1, color: link.color, display: 'flex' }}><Icon /></span>
+                  <span style={{ position: 'relative', zIndex: 1, color: link.color }}>{t(link.key)}</span>
                 </button>
               );
             })}
@@ -232,10 +255,10 @@ export function Navbar() {
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => { setIsColorOpen(!isColorOpen); setIsLangOpen(false); }}
-                style={iconBtnStyle(isDark)}
+                style={iconBtnStyle(isDark, '#A855F7')}
                 aria-label="Color theme"
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--sah-accent-1)'; e.currentTarget.style.color = 'var(--sah-accent-1)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(27,42,74,0.06)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(27,42,74,0.06)'; e.currentTarget.style.color = '#A855F7'; }}
               >
                 <IconPalette />
               </button>
@@ -282,7 +305,7 @@ export function Navbar() {
                 onClick={toggleDarkLight}
                 whileHover={{ scale: 1.1, rotate: isDark ? 45 : -15 }}
                 whileTap={{ scale: 0.9 }}
-                style={iconBtnStyle(isDark)}
+                style={iconBtnStyle(isDark, isDark ? '#FBBF24' : '#6366F1')}
                 aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
               >
                 {isDark ? <IconSun /> : <IconMoon />}
@@ -294,7 +317,7 @@ export function Navbar() {
               <button
                 onClick={() => { setIsLangOpen(!isLangOpen); setIsColorOpen(false); }}
                 style={{
-                  ...iconBtnStyle(isDark),
+                  ...iconBtnStyle(isDark, '#3B82F6'),
                   gap: 4, padding: '6px 8px', fontSize: 11, fontWeight: 700,
                 }}
                 aria-label="Select language"
@@ -309,7 +332,7 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    style={{ ...dropdownStyle(isDark), minWidth: 170, maxHeight: 320, overflowY: 'auto' }}
+                    style={{ ...dropdownStyle(isDark), minWidth: 170 }}
                   >
                     {LANGUAGES.map((lang) => (
                       <button
@@ -336,22 +359,55 @@ export function Navbar() {
               </AnimatePresence>
             </div>
 
-            {/* CTA — glassmorphic gradient */}
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => scrollTo('#pricing')}
+            {/* CTA — premium glassmorphic with shimmer */}
+            <Link
+              href="/login"
               className="navbar-cta-desktop"
               style={{
-                background: `linear-gradient(135deg, var(--sah-accent-1), var(--sah-accent-2))`,
-                border: 'none', padding: '7px 16px', borderRadius: 10,
-                color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                letterSpacing: '0.02em', whiteSpace: 'nowrap',
-                boxShadow: '0 2px 12px rgba(var(--sah-accent-1-rgb), 0.3)',
+                position: 'relative',
+                overflow: 'hidden',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: `linear-gradient(135deg, var(--sah-accent-1) 0%, var(--sah-accent-2) 100%)`,
+                border: '1px solid rgba(255,255,255,0.25)',
+                padding: '7px 14px',
+                borderRadius: 12,
+                color: '#fff',
+                fontSize: 12,
+                flexShrink: 0,
+                fontWeight: 700,
+                cursor: 'pointer',
+                letterSpacing: '0.04em',
+                whiteSpace: 'nowrap',
+                textDecoration: 'none',
+                boxShadow: '0 2px 16px rgba(var(--sah-accent-1-rgb),0.45), 0 0 0 1px rgba(255,255,255,0.12) inset',
+                backdropFilter: 'blur(12px)',
+                transition: 'box-shadow 0.25s, transform 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px) scale(1.03)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 28px rgba(var(--sah-accent-1-rgb),0.6), 0 0 0 1px rgba(255,255,255,0.2) inset';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.transform = '';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 16px rgba(var(--sah-accent-1-rgb),0.45), 0 0 0 1px rgba(255,255,255,0.12) inset';
               }}
             >
-              {t('nav.getStarted')}
-            </motion.button>
+              {/* Shimmer sweep */}
+              <span style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',
+                backgroundSize: '200% 100%',
+                animation: 'navbar-cta-shimmer 2.4s infinite',
+                borderRadius: 'inherit',
+                pointerEvents: 'none',
+              }} />
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+              </svg>
+              Start Free
+            </Link>
 
             {/* Hamburger */}
             <button

@@ -19,6 +19,8 @@ import { sosTriggerRoutes } from './routes/sos/trigger';
 import { remindersRoutes } from './routes/reminders/index';
 import { profileRoutes } from './routes/profile/index';
 import { demoRequestRoutes } from './routes/demo-request';
+import { onboardingRoutes } from './routes/onboarding/complete';
+import { smsRoutes } from './routes/sms/send-install-link';
 
 export async function buildApp() {
   const app = Fastify({
@@ -91,6 +93,8 @@ export async function buildApp() {
   await app.register(remindersRoutes, { prefix: '/api' });
   await app.register(profileRoutes, { prefix: '/api' });
   await app.register(demoRequestRoutes, { prefix: '/api' });
+  await app.register(onboardingRoutes, { prefix: '/api' });
+  await app.register(smsRoutes, { prefix: '/api/sms' });
 
   // ── Error handler ──
   app.setErrorHandler((error, request, reply) => {

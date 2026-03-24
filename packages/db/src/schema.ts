@@ -14,6 +14,8 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
   role: text('role', { enum: ['family', 'elderly', 'ngo_admin', 'sys_admin'] }).default('family'),
   organizationId: uuid('organization_id'),
+  onboardingComplete: boolean('onboarding_complete').default(false),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().$onUpdate(() => new Date()),
 }, (t) => [
@@ -266,4 +268,112 @@ export const voiceCommandLogsRelations = relations(voiceCommandLogs, ({ one }) =
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(users),
+}));
+
+// ═══════════════════════════════════════════
+// HEALTH NOTES
+// ═══════════════════════════════════════════
+
+export const healthNotes = pgTable('health_notes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  authorUserId: uuid('author_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  noteText: text('note_text').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('health_notes_profile_idx').on(t.elderlyProfileId),
+]);
+
+// ═══════════════════════════════════════════
+// APPOINTMENTS
+// ═══════════════════════════════════════════
+
+export const appointments = pgTable('appointments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  createdByUserId: uuid('created_by_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  doctorName: text('doctor_name').notNull(),
+  specialty: text('specialty'),
+  location: text('location'),
+  scheduledAt: timestamp('scheduled_at', { withTimezone: true }).notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('appointments_profile_idx').on(t.elderlyProfileId),
+  index('appointments_scheduled_idx').on(t.scheduledAt),
+]);
+
+// ═══════════════════════════════════════════
+// DEVICE REGISTRATIONS
+// ═══════════════════════════════════════════
+
+export const deviceRegistrations = pgTable('device_registrations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  deviceKey: text('device_key').unique().notNull(),
+  deviceModel: text('device_model'),
+  androidVersion: text('android_version'),
+  appVersion: text('app_version'),
+  fcmToken: text('fcm_token'),
+  lastPingAt: timestamp('last_ping_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('device_reg_profile_idx').on(t.elderlyProfileId),
+  uniqueIndex('device_reg_key_idx').on(t.deviceKey),
+]);
+
+// ═══════════════════════════════════════════
+// VOICE PROFILE SAMPLES
+// ═══════════════════════════════════════════
+
+export const voiceProfileSamples = pgTable('voice_profile_samples', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
+  sampleIndex: integer('sample_index').notNull(),
+  storageUrl: text('storage_url'),
+  quality: decimal('quality', { precision: 3, scale: 2 }),
+  language: text('language'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('voice_sample_profile_idx').on(t.elderlyProfileId),
+]);
+
+// ═══════════════════════════════════════════
+// NEW TABLE RELATIONS
+// ═══════════════════════════════════════════
+
+export const healthNotesRelations = relations(healthNotes, ({ one }) => ({
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [healthNotes.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+  author: one(users, {
+    fields: [healthNotes.authorUserId],
+    references: [users.id],
+  }),
+}));
+
+export const appointmentsRelations = relations(appointments, ({ one }) => ({
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [appointments.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+  createdBy: one(users, {
+    fields: [appointments.createdByUserId],
+    references: [users.id],
+  }),
+}));
+
+export const deviceRegistrationsRelations = relations(deviceRegistrations, ({ one }) => ({
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [deviceRegistrations.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
+}));
+
+export const voiceProfileSamplesRelations = relations(voiceProfileSamples, ({ one }) => ({
+  elderlyProfile: one(elderlyProfiles, {
+    fields: [voiceProfileSamples.elderlyProfileId],
+    references: [elderlyProfiles.id],
+  }),
 }));
