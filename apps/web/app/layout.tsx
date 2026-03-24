@@ -1,6 +1,14 @@
-<<<<<<< HEAD
 import type { Metadata, Viewport } from 'next';
-import { Syne, DM_Sans, Open_Sans, Caveat } from 'next/font/google';
+import {
+  Syne,
+  DM_Sans,
+  Open_Sans,
+  Caveat,
+  Instrument_Serif,
+  Sora,
+  Noto_Sans,
+  Playfair_Display,
+} from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from 'next-themes';
 import { LenisProvider } from '@/providers/lenis-provider';
@@ -12,27 +20,6 @@ import { CustomCursor } from '@/components/ui/CustomCursor';
 import { BackgroundOrbs } from '@/components/ui/BackgroundOrbs';
 import { Navbar } from '@/components/layout/Navbar';
 import './globals.css';
-=======
-import type { Metadata, Viewport } from "next";
-import {
-  Syne,
-  DM_Sans,
-  Open_Sans,
-  Instrument_Serif,
-  Sora,
-  Noto_Sans,
-  Playfair_Display,
-} from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { LenisProvider } from "@/providers/lenis-provider";
-import { SoundProvider } from "@/providers/sound-provider";
-import { ToastProvider } from "@sahayak/ui";
-import { Grainient } from "@/components/ui/Grainient";
-import { CustomCursor } from "@/components/ui/CustomCursor";
-import { BackgroundOrbs } from "@/components/ui/BackgroundOrbs";
-import { Navbar } from "@/components/layout/Navbar";
-import "./globals.css";
->>>>>>> f746b0c2e0f6cbe0ebeb108091db235e8d192a90
 
 const openSans = Open_Sans({
   subsets: ["latin"],
