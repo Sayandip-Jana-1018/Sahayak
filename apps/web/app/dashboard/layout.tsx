@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import {
   LayoutDashboard, Pill, Heart, AlertTriangle, Settings, Users, Bell,
+  Shield, Palette,
 } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
 import { useRealtimeDashboard } from '@/hooks/useRealtimeDashboard';
@@ -82,6 +83,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const elderlyProfileId = overviewData?.profile?.id ?? null;
   useRealtimeDashboard({ elderlyProfileId, enabled: !!elderlyProfileId });
 
+  // Fetch user role for admin/studio nav visibility
+  const { data: profileData } = useQuery<{ role: string }>(
+    {
+      queryKey: ['user-profile-role'],
+      queryFn: () => apiRequest<{ role: string }>('/api/profile', getToken),
+      staleTime: 10 * 60 * 1000,
+    },
+  );
+  const userRole = profileData?.role || 'family';
+
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
 
@@ -125,6 +136,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
           <span className="side-nav__txt" style={{ color: '#10B981' }}>Profiles</span>
         </Link>
+        {(userRole === 'ngo_admin' || userRole === 'sys_admin') && (
+          <Link href="/studio" className="side-nav__link" title="Studio Panel">
+            <span className="side-nav__icon-bubble" style={{ color: '#A855F7' }}>
+              <Palette size={18} strokeWidth={1.8} />
+            </span>
+            <span className="side-nav__txt" style={{ color: '#A855F7' }}>Studio</span>
+          </Link>
+        )}
+        {userRole === 'sys_admin' && (
+          <Link href="/admin" className="side-nav__link" title="Admin Panel">
+            <span className="side-nav__icon-bubble" style={{ color: '#EF4444' }}>
+              <Shield size={18} strokeWidth={1.8} />
+            </span>
+            <span className="side-nav__txt" style={{ color: '#EF4444' }}>Admin</span>
+          </Link>
+        )}
       </nav>
 
       {/* ── MOBILE: Bottom bar ── */}

@@ -32,7 +32,15 @@ import { socketPlugin } from './plugins/socket';
 import { studioOverviewRoutes } from './routes/studio/overview';
 import { studioCommandsRoutes } from './routes/studio/commands';
 import { studioContentRoutes } from './routes/studio/content';
+import { studioDevicesRoutes } from './routes/studio/devices';
+import { studioAnalyticsRoutes } from './routes/studio/analytics';
 import { adminOverviewRoutes } from './routes/admin/overview';
+import { adminUsersRoutes } from './routes/admin/users';
+import { adminOrganizationsRoutes } from './routes/admin/organizations';
+import { adminSosEventsRoutes } from './routes/admin/sos-events';
+import { adminAiUsageRoutes } from './routes/admin/ai-usage';
+import { adminSystemHealthRoutes } from './routes/admin/system-health';
+import { adminAnnouncementsRoutes } from './routes/admin/announcements';
 
 export async function buildApp() {
   const app = Fastify({
@@ -117,7 +125,15 @@ export async function buildApp() {
   await app.register(studioOverviewRoutes, { prefix: '/api' });
   await app.register(studioCommandsRoutes, { prefix: '/api' });
   await app.register(studioContentRoutes, { prefix: '/api' });
+  await app.register(studioDevicesRoutes, { prefix: '/api' });
+  await app.register(studioAnalyticsRoutes, { prefix: '/api' });
   await app.register(adminOverviewRoutes, { prefix: '/api' });
+  await app.register(adminUsersRoutes, { prefix: '/api' });
+  await app.register(adminOrganizationsRoutes, { prefix: '/api' });
+  await app.register(adminSosEventsRoutes, { prefix: '/api' });
+  await app.register(adminAiUsageRoutes, { prefix: '/api' });
+  await app.register(adminSystemHealthRoutes, { prefix: '/api' });
+  await app.register(adminAnnouncementsRoutes, { prefix: '/api' });
 
   // ── Socket.io ── (must be after server is ready)
   app.addHook('onReady', async () => {
