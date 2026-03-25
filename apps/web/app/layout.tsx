@@ -152,7 +152,6 @@ export default function RootLayout({
                     <CustomCursor />
                     <Navbar />
                     <main
-                      id="main-content"
                       style={{ position: "relative", zIndex: 1 }}
                     >
                       {children}

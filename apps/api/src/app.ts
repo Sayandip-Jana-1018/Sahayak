@@ -16,11 +16,23 @@ import { dashboardHealthRoutes } from './routes/dashboard/health';
 import { medicationsRoutes } from './routes/medications/index';
 import { medicationByIdRoutes } from './routes/medications/[id]';
 import { sosTriggerRoutes } from './routes/sos/trigger';
+import { sosEventsRoutes } from './routes/sos/events';
 import { remindersRoutes } from './routes/reminders/index';
 import { profileRoutes } from './routes/profile/index';
 import { demoRequestRoutes } from './routes/demo-request';
 import { onboardingRoutes } from './routes/onboarding/complete';
+import { onboardingStatusRoutes } from './routes/onboarding/check-onboarding';
+import { createProfileRoutes } from './routes/onboarding/create-profile';
 import { smsRoutes } from './routes/sms/send-install-link';
+import { deviceRoutes } from './routes/device/index';
+import { voiceProfileRoutes } from './routes/voice-profile/index';
+import { healthNotesRoutes } from './routes/health-notes/index';
+import { appointmentsRoutes } from './routes/appointments/index';
+import { socketPlugin } from './plugins/socket';
+import { studioOverviewRoutes } from './routes/studio/overview';
+import { studioCommandsRoutes } from './routes/studio/commands';
+import { studioContentRoutes } from './routes/studio/content';
+import { adminOverviewRoutes } from './routes/admin/overview';
 
 export async function buildApp() {
   const app = Fastify({
@@ -90,11 +102,27 @@ export async function buildApp() {
   await app.register(medicationsRoutes, { prefix: '/api' });
   await app.register(medicationByIdRoutes, { prefix: '/api' });
   await app.register(sosTriggerRoutes, { prefix: '/api/sos' });
+  await app.register(sosEventsRoutes, { prefix: '/api' });
   await app.register(remindersRoutes, { prefix: '/api' });
   await app.register(profileRoutes, { prefix: '/api' });
   await app.register(demoRequestRoutes, { prefix: '/api' });
   await app.register(onboardingRoutes, { prefix: '/api' });
+  await app.register(onboardingStatusRoutes, { prefix: '/api' });
+  await app.register(createProfileRoutes, { prefix: '/api' });
   await app.register(smsRoutes, { prefix: '/api/sms' });
+  await app.register(deviceRoutes, { prefix: '/api' });
+  await app.register(voiceProfileRoutes, { prefix: '/api' });
+  await app.register(healthNotesRoutes, { prefix: '/api' });
+  await app.register(appointmentsRoutes, { prefix: '/api' });
+  await app.register(studioOverviewRoutes, { prefix: '/api' });
+  await app.register(studioCommandsRoutes, { prefix: '/api' });
+  await app.register(studioContentRoutes, { prefix: '/api' });
+  await app.register(adminOverviewRoutes, { prefix: '/api' });
+
+  // ── Socket.io ── (must be after server is ready)
+  app.addHook('onReady', async () => {
+    await socketPlugin(app);
+  });
 
   // ── Error handler ──
   app.setErrorHandler((error, request, reply) => {

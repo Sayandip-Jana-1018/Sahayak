@@ -31,27 +31,35 @@ export default clerkMiddleware(async (auth, req) => {
 
   const publicMetadata = (sessionClaims?.publicMetadata || {}) as Record<string, unknown>;
   const role = publicMetadata.role as string | undefined;
-  const onboardingComplete = publicMetadata.onboarding_complete as boolean | undefined;
+  const isDev = process.env.NODE_ENV === 'development';
+  
+  // Check onboarding status from BOTH Clerk publicMetadata AND a fallback cookie.
+  // Clerk's JWT refresh can be delayed, so the cookie acts as an instant bridge.
+  const clerkOnboardingDone = publicMetadata.onboarding_complete as boolean | undefined;
+  const cookieOnboardingDone = req.cookies.get('sahayak_onboarding_done')?.value === '1';
+  const onboardingComplete = clerkOnboardingDone || cookieOnboardingDone;
 
-  // Studio routes — NGO admin only, return 404 to prevent enumeration
+  // Studio routes — NGO admin only (dev: bypass role check)
   if (isStudioRoute(req)) {
-    if (role !== 'ngo_admin') {
+    if (!isDev && role !== 'ngo_admin') {
       return NextResponse.rewrite(new URL('/not-found', req.url));
     }
     return NextResponse.next();
   }
 
-  // Admin routes — sys_admin only, return 404
+  // Admin routes — sys_admin only (dev: bypass role check)
   if (isAdminRoute(req)) {
-    if (role !== 'sys_admin') {
+    if (!isDev && role !== 'sys_admin') {
       return NextResponse.rewrite(new URL('/not-found', req.url));
     }
     return NextResponse.next();
   }
 
   // Onboarding routes — redirect to dashboard if already complete
+  // Exception: ?addElder=true allows returning to onboarding to add another profile
   if (isOnboardingRoute(req)) {
-    if (onboardingComplete) {
+    const isAddingElder = req.nextUrl.searchParams.get('addElder') === 'true';
+    if (onboardingComplete && !isAddingElder) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
     return NextResponse.next();

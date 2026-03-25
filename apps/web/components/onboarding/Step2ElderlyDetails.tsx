@@ -357,12 +357,40 @@ export function Step2ElderlyDetails() {
           border-radius: 16px;
           z-index: 20;
           box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+          pointer-events: auto;
+          touch-action: pan-y;
+        }
+
+        .step2__dropdown::-webkit-scrollbar {
+          width: 6px;
+        }
+        .step2__dropdown::-webkit-scrollbar-track {
+          background: transparent;
+          margin-top: 8px;
+          margin-bottom: 8px;
+        }
+        .step2__dropdown::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 10px;
+        }
+        .step2__dropdown::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
         }
 
         :global(.light) .step2__dropdown,
         :global([data-theme="light"]) .step2__dropdown {
           background: #FFFFFF;
           box-shadow: 0 8px 32px rgba(27,42,74,0.1);
+        }
+        
+        :global(.light) .step2__dropdown::-webkit-scrollbar-thumb,
+        :global([data-theme="light"]) .step2__dropdown::-webkit-scrollbar-thumb {
+          background: rgba(27, 42, 74, 0.15);
+        }
+        
+        :global(.light) .step2__dropdown::-webkit-scrollbar-thumb:hover,
+        :global([data-theme="light"]) .step2__dropdown::-webkit-scrollbar-thumb:hover {
+          background: rgba(27, 42, 74, 0.3);
         }
 
         .step2__dropdown-item {

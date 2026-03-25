@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Clock, MapPin, CheckCircle, Mic, Smartphone, Timer, Users } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
+import { AlertTriangle, Clock, CheckCircle, Mic, Smartphone, Timer, ShieldCheck } from 'lucide-react';
+import { apiRequest, useApiClient } from '@/lib/api';
+import { useToastStore } from '@/store/toastStore';
 
 interface SOSEvent {
   id: string;
@@ -35,29 +36,32 @@ const TRIGGER_ICONS: Record<string, typeof Mic> = {
   fall: AlertTriangle,
 };
 
-const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#E63946',
-  high: '#E63946',
-  medium: '#FFB703',
-  low: '#2D6A4F',
-};
-
 export default function SOSPage() {
+  const { getToken } = useAuth();
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  const addToast = useToastStore((s) => s.addToast);
+
   const { data, isLoading, error, refetch } = useQuery<{
     events: SOSEvent[];
     total: number;
   }>({
     queryKey: ['sos-events'],
-    queryFn: async () => {
-      const res = await fetch(`${API_URL}/api/sos-events?page=1&limit=20`);
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
-    },
+    queryFn: () => apiRequest('/api/sos-events?page=1&limit=20', getToken),
   });
 
-  const events = data?.events || [];
+  const handleResolve = async (id: string) => {
+    try {
+      await api.put(`/api/sos-events/${id}/resolve`);
+      addToast('SOS event resolved ✓', 'success');
+      queryClient.invalidateQueries({ queryKey: ['sos-events'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
+    } catch {
+      addToast('Failed to resolve SOS event', 'error');
+    }
+  };
 
-  // Compute stats
+  const events = data?.events || [];
   const totalAll = data?.total || 0;
   const avgResponse = events.filter(e => e.responseTimeMs).length > 0
     ? Math.round(events.filter(e => e.responseTimeMs).reduce((s, e) => s + (e.responseTimeMs || 0), 0) / events.filter(e => e.responseTimeMs).length / 1000)
@@ -65,136 +69,373 @@ export default function SOSPage() {
   const lastEvent = events[0]?.triggeredAt || null;
 
   return (
-    <div className="sos-page">
-      <h2 className="sos-page__title">SOS History</h2>
+    <div className="sp">
+      <div className="sp__head">
+        <h2 className="sp__title">SOS History</h2>
+        <p className="sp__sub">Emergency events and response times</p>
+      </div>
 
-      {/* Stats row */}
-      <div className="sos-page__stats">
-        <div className="sos-stat">
-          <span className="sos-stat__value">{totalAll}</span>
-          <span className="sos-stat__label">Total Events</span>
+      {/* Stats Row */}
+      <div className="sp__stats">
+        <div className="sp__stat">
+          <span className="sp__stat-val">{totalAll}</span>
+          <span className="sp__stat-label">Total Events</span>
         </div>
-        <div className="sos-stat">
-          <span className="sos-stat__value">{avgResponse ? `${avgResponse}s` : '—'}</span>
-          <span className="sos-stat__label">Avg Response</span>
+        <div className="sp__stat">
+          <span className="sp__stat-val">{avgResponse > 0 ? `${avgResponse}s` : '—'}</span>
+          <span className="sp__stat-label">Avg Response</span>
         </div>
-        <div className="sos-stat">
-          <span className="sos-stat__value">{lastEvent ? relativeTime(lastEvent) : 'None'}</span>
-          <span className="sos-stat__label">Last Event</span>
+        <div className="sp__stat">
+          <span className="sp__stat-val">{lastEvent ? relativeTime(lastEvent) : 'None'}</span>
+          <span className="sp__stat-label">Last Event</span>
         </div>
       </div>
 
-      {/* Timeline */}
+      {/* Events */}
       {isLoading ? (
-        <div className="sos-page__loading">Loading...</div>
+        <div className="sp__skels">
+          {[1, 2].map(i => <div key={i} className="sp__skel" />)}
+        </div>
       ) : error ? (
-        <div className="sos-page__error">
-          <AlertTriangle size={24} />
-          <p>Failed to load SOS history</p>
+        <div className="sp__error">
+          <AlertTriangle size={28} />
+          <p>Failed to load SOS events</p>
           <button onClick={() => refetch()}>Retry</button>
         </div>
       ) : events.length === 0 ? (
-        <div className="sos-page__empty">
-          <CheckCircle size={32} />
+        <div className="sp__empty">
+          <div className="sp__empty-icon"><ShieldCheck size={32} strokeWidth={1.5} /></div>
           <p>No SOS events recorded</p>
           <span>This is a good thing! Emergency events will appear here.</span>
         </div>
       ) : (
-        <div className="sos-timeline">
-          {events.map((event) => {
-            const TriggerIcon = TRIGGER_ICONS[event.triggerType] || AlertTriangle;
-            const severityColor = SEVERITY_COLORS[event.severity] || '#E63946';
-            const isActive = !event.resolvedAt;
-
+        <div className="sp__list">
+          {events.map((evt) => {
+            const TrigIcon = TRIGGER_ICONS[evt.triggerType] || AlertTriangle;
+            const resolved = !!evt.resolvedAt;
             return (
-              <div key={event.id} className={`sos-timeline__card ${isActive ? 'sos-timeline__card--active' : ''}`}>
-                <div className="sos-timeline__dot" style={{ background: severityColor }} />
-
-                <div className="sos-timeline__top">
-                  <span className="sos-timeline__severity" style={{ background: `${severityColor}15`, color: severityColor, borderColor: `${severityColor}30` }}>
-                    {event.severity.toUpperCase()}
-                  </span>
-                  <span className="sos-timeline__time">{relativeTime(event.triggeredAt)}</span>
-                  <span className={`sos-timeline__status ${isActive ? 'sos-timeline__status--active' : 'sos-timeline__status--resolved'}`}>
-                    {isActive ? 'Active' : 'Resolved'}
-                  </span>
-                </div>
-
-                <div className="sos-timeline__trigger">
-                  <TriggerIcon size={16} />
-                  <span>
-                    {event.triggerType === 'voice' && 'Voice SOS triggered'}
-                    {event.triggerType === 'shake' && 'Phone shake detected'}
-                    {event.triggerType === 'inactivity' && 'No activity detected'}
-                    {event.triggerType === 'fall' && 'Fall detected'}
-                  </span>
-                </div>
-
-                {event.locationLat && event.locationLng && (
-                  <div className="sos-timeline__location">
-                    <MapPin size={14} />
-                    <a href={`https://maps.google.com/?q=${event.locationLat},${event.locationLng}`} target="_blank" rel="noopener">
-                      View on Google Maps
-                    </a>
+              <div key={evt.id} className="sp__event">
+                <div className="sp__event-left">
+                  <div className={`sp__event-icon sp__event-icon--${evt.severity}`}>
+                    <TrigIcon size={18} />
                   </div>
-                )}
-
-                {event.responseTimeMs && (
-                  <div className="sos-timeline__response">
-                    <Clock size={14} />
-                    <span>Notified in {(event.responseTimeMs / 1000).toFixed(1)}s</span>
-                    {event.smsCount && (
-                      <>
-                        &nbsp;·&nbsp;
-                        <Users size={14} />
-                        <span>{event.smsCount} contacts</span>
-                      </>
-                    )}
+                  <div className="sp__event-info">
+                    <span className="sp__event-type">
+                      {evt.triggerType.charAt(0).toUpperCase() + evt.triggerType.slice(1)} trigger
+                    </span>
+                    <span className="sp__event-time">
+                      <Clock size={12} /> {relativeTime(evt.triggeredAt)}
+                    </span>
                   </div>
-                )}
+                </div>
+                <div className="sp__event-right">
+                  <span className={`sp__event-badge sp__event-badge--${evt.severity}`}>
+                    {evt.severity}
+                  </span>
+                  {resolved ? (
+                    <span className="sp__event-resolved"><CheckCircle size={14} /> Resolved</span>
+                  ) : (
+                    <button className="sp__event-resolve" onClick={() => handleResolve(evt.id)}>
+                      Resolve
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       )}
 
-      <style jsx>{`
-        .sos-page { max-width: 800px; }
-        .sos-page__title { font-size: 22px !important; font-weight: 700 !important; margin-bottom: 20px; color: var(--text-primary); }
-
-        .sos-page__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
-        .sos-stat { padding: 16px; border-radius: 14px; background: var(--glass-bg); border: 1px solid var(--glass-border); text-align: center; }
-        .sos-stat__value { display: block; font-size: 20px; font-weight: 700; color: var(--text-primary); }
-        .sos-stat__label { font-size: 12px; color: var(--text-muted); }
-
-        .sos-timeline { position: relative; padding-left: 24px; }
-        .sos-timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.08); }
-        :global(.light) .sos-timeline::before { background: rgba(27,42,74,0.08); }
-
-        .sos-timeline__card { position: relative; padding: 16px 20px; border-radius: 14px; background: var(--glass-bg); border: 1px solid var(--glass-border); margin-bottom: 12px; }
-        .sos-timeline__card--active { border-color: rgba(230,57,70,0.3); animation: sos-pulse 2s infinite; }
-        @keyframes sos-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(230,57,70,0.15); } 50% { box-shadow: 0 0 0 6px rgba(230,57,70,0); } }
-
-        .sos-timeline__dot { position: absolute; left: -20px; top: 20px; width: 12px; height: 12px; border-radius: 50%; }
-
-        .sos-timeline__top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .sos-timeline__severity { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px solid; letter-spacing: 0.05em; }
-        .sos-timeline__time { font-size: 12px; color: var(--text-muted); flex: 1; }
-        .sos-timeline__status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
-        .sos-timeline__status--active { background: rgba(230,57,70,0.1); color: #E63946; }
-        .sos-timeline__status--resolved { background: rgba(45,106,79,0.1); color: #2D6A4F; }
-
-        .sos-timeline__trigger { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-primary); margin-bottom: 8px; }
-        .sos-timeline__location { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 6px; }
-        .sos-timeline__location a { color: #FF6B2C; text-decoration: underline; }
-        .sos-timeline__response { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
-
-        .sos-page__empty { text-align: center; padding: 60px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .sos-page__empty span { font-size: 13px; }
-        .sos-page__loading { padding: 40px; text-align: center; color: var(--text-muted); }
-        .sos-page__error { text-align: center; padding: 60px; color: #E63946; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .sos-page__error button { padding: 8px 20px; border-radius: 10px; background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.2); color: #E63946; cursor: pointer; }
-      `}</style>
+      <style jsx>{`${sosStyles}`}</style>
     </div>
   );
 }
+
+const sosStyles = `
+  .sp__head { margin-bottom: 20px; text-align: center; }
+
+  .sp__title {
+    font-size: clamp(20px, 3vw, 26px) !important;
+    font-weight: 800 !important;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+
+  .sp__sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 2px 0 0;
+    font-family: var(--font-display);
+  }
+
+  /* ─── STATS ─── */
+  .sp__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .sp__stat {
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sp__stat-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  .sp__stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: var(--font-display);
+  }
+
+  /* ─── EVENT LIST ─── */
+  .sp__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sp__event {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    transition: all var(--duration-normal) var(--ease-fluid);
+    gap: 12px;
+  }
+
+  .sp__event:hover {
+    border-color: var(--glass-border-hover);
+  }
+
+  .sp__event-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sp__event-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sp__event-icon--critical,
+  .sp__event-icon--high {
+    background: linear-gradient(135deg, rgba(230, 57, 70, 0.15), rgba(230, 57, 70, 0.05));
+    color: #E63946;
+  }
+
+  .sp__event-icon--medium {
+    background: linear-gradient(135deg, rgba(var(--sah-accent-1-rgb), 0.15), rgba(var(--sah-accent-1-rgb), 0.05));
+    color: var(--sah-accent-1);
+  }
+
+  .sp__event-icon--low {
+    background: linear-gradient(135deg, rgba(var(--sah-accent-2-rgb), 0.15), rgba(var(--sah-accent-2-rgb), 0.05));
+    color: var(--sah-accent-2);
+  }
+
+  .sp__event-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .sp__event-type {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+  }
+
+  .sp__event-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+  }
+
+  .sp__event-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .sp__event-badge {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-family: var(--font-display);
+  }
+
+  .sp__event-badge--critical,
+  .sp__event-badge--high {
+    background: rgba(230, 57, 70, 0.12);
+    color: #E63946;
+  }
+
+  .sp__event-badge--medium {
+    background: rgba(var(--sah-accent-1-rgb), 0.12);
+    color: var(--sah-accent-1);
+  }
+
+  .sp__event-badge--low {
+    background: rgba(var(--sah-accent-2-rgb), 0.12);
+    color: var(--sah-accent-2);
+  }
+
+  .sp__event-resolved {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--sah-accent-2);
+    font-weight: 600;
+    font-family: var(--font-display);
+  }
+
+  .sp__event-resolve {
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--sah-accent-1), var(--sah-accent-2));
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    transition: all var(--duration-fast) var(--ease-fluid);
+  }
+
+  .sp__event-resolve:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--sah-accent-1-rgb), 0.25);
+  }
+
+  /* ─── EMPTY ─── */
+  .sp__empty {
+    text-align: center;
+    padding: 60px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+  }
+
+  .sp__empty-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-lg);
+    background: rgba(var(--sah-accent-2-rgb), 0.1);
+    color: var(--sah-accent-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .sp__empty p {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+    font-family: var(--font-display);
+  }
+
+  .sp__empty span {
+    font-size: 13px;
+    max-width: 280px;
+  }
+
+  /* ─── SKELETON ─── */
+  .sp__skels { display: flex; flex-direction: column; gap: 10px; }
+  .sp__skel {
+    height: 72px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(90deg, var(--glass-bg) 0%, var(--glass-bg-hover) 50%, var(--glass-bg) 100%);
+    background-size: 200%;
+    animation: sp-shimmer 1.5s infinite;
+    border: 1px solid var(--glass-border);
+  }
+  @keyframes sp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ─── ERROR ─── */
+  .sp__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 60px;
+    text-align: center;
+    color: #E63946;
+  }
+
+  .sp__error p { color: var(--text-secondary); margin: 0; }
+
+  .sp__error button {
+    padding: 8px 24px;
+    border-radius: var(--radius-full);
+    background: rgba(230, 57, 70, 0.1);
+    border: 1px solid rgba(230, 57, 70, 0.2);
+    color: #E63946;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: var(--font-display);
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .sp__stats {
+      grid-template-columns: 1fr;
+    }
+
+    .sp__event {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .sp__event-right {
+      margin-top: 8px;
+    }
+  }
+`;

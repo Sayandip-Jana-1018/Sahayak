@@ -1,4 +1,7 @@
 import { buildApp } from './app';
+import { startReminderWorker } from './workers/reminder.worker';
+import { startSOSWorker } from './workers/sos.worker';
+import { startLonelinessWorker } from './workers/loneliness.worker';
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -36,6 +39,12 @@ async function start() {
   try {
     await app.listen({ port: PORT, host: HOST });
     app.log.info(`🚀 Sahayak API running on http://${HOST}:${PORT}`);
+
+    // ── Start BullMQ workers & cron jobs ──
+    startReminderWorker();
+    startSOSWorker();
+    startLonelinessWorker();
+    app.log.info('🔧 All workers and cron jobs initialized');
   } catch (err) {
     app.log.fatal(err, 'Failed to start server');
     process.exit(1);

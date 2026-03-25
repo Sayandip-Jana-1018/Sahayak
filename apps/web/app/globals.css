@@ -84,56 +84,55 @@
   --section-overlay: rgba(10, 10, 20, 0.3);
 }
 
-/* ── Light Mode — Premium Warm Style ── */
+/* ── Light Mode — Premium Modern Style ── */
 .light,
 [data-theme="light"] {
-  /* Warm parchment/cream backgrounds */
-  --bg-primary: #FFFBF0;
-  --bg-secondary: #FFF8E8;
-  --bg-tertiary: #F5F0E0;
-  --bg-surface: rgba(0, 0, 0, 0.02);
+  /* Clean white with subtle cool-lavender tint */
+  --bg-primary: #F6F7FF;
+  --bg-secondary: #EEEEFF;
+  --bg-tertiary: #E4E6F8;
+  --bg-surface: rgba(99, 102, 241, 0.04);
 
-  /* Navy/dark blue text — formal, official */
-  --text-primary: #1B2A4A;
-  --text-secondary: rgba(27, 42, 74, 0.72);
-  --text-muted: rgba(27, 42, 74, 0.50);
+  /* Rich dark blue text for strong contrast */
+  --text-primary: #12143A;
+  --text-secondary: rgba(18, 20, 58, 0.68);
+  --text-muted: rgba(18, 20, 58, 0.42);
 
-  /* Glass in light mode — frosted white cards */
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-bg-hover: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(27, 42, 74, 0.10);
-  --glass-border-hover: rgba(27, 42, 74, 0.18);
-  --glass-shadow: 0 4px 24px rgba(27, 42, 74, 0.08);
+  /* Glass in light mode — crisp frosted white panes */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-hover: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(99, 102, 241, 0.12);
+  --glass-border-hover: rgba(99, 102, 241, 0.24);
+  --glass-shadow: 0 4px 24px rgba(18, 20, 58, 0.08);
 
-  --section-overlay: rgba(255, 251, 240, 0.6);
+  --section-overlay: rgba(246, 247, 255, 0.65);
 }
 
 /* Light mode body */
 .light body,
 [data-theme="light"] body {
-  background: #FFFBF0;
+  background: #F6F7FF;
 }
 
-/* Grainient in light mode — slightly more visible for warmth */
+/* Light mode grainient — more vivid and saturated */
 .light .grainient-canvas,
 [data-theme="light"] .grainient-canvas {
-  opacity: 0.25 !important;
-  filter: saturate(0.7) brightness(1.3);
+  opacity: 0.35 !important;
+  filter: saturate(1.4) brightness(1.1) hue-rotate(-10deg);
 }
 
-/* Hero readability overlay removed — clean hero background */
-
-/* Light mode: transparent section wrapper instead of dark overlay */
+/* Light mode: transparent section wrapper */
 .light [style*="rgba(8, 8, 18"],
 [data-theme="light"] [style*="rgba(8, 8, 18"] {
-  background: rgba(255, 251, 240, 0.35) !important;
+  background: rgba(246, 247, 255, 0.35) !important;
 }
 
-/* Light mode: MacBook scene softer */
+/* Light mode: MacBook scene */
 .light #macbook-scene,
 [data-theme="light"] #macbook-scene {
-  filter: drop-shadow(0 20px 40px rgba(27,42,74,0.15));
+  filter: drop-shadow(0 20px 40px rgba(18, 20, 58, 0.12));
 }
+
 
 /* ── Color Themes ── */
 [data-color-theme="ocean"] {

@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent, useSpring } fr
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useThemeStore, colorThemes } from '@/store/themeStore';
 import { useLocaleStore, type Locale } from '@/store/localeStore';
 

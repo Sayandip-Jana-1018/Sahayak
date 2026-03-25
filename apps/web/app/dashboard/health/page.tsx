@@ -1,61 +1,82 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Activity, AlertTriangle } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
+import { Activity, AlertTriangle, Heart, BarChart3 } from 'lucide-react';
+import { apiRequest } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+/* The API returns this shape from /api/dashboard/health-data */
+interface HealthData {
+  activityChart: { labels: string[]; data: number[] };
+  medicationAdherence: { labels: string[]; taken: number[]; missed: number[] };
+  healthNotes: unknown[];
+  appointments: unknown[];
+}
 
 export default function HealthPage() {
-  const { data, isLoading, error, refetch } = useQuery<{
-    activityByDay: Array<{ date: string; commandCount: number }>;
-    medicationAdherence: Array<{ date: string; taken: number; missed: number }>;
-    intentBreakdown: Array<{ intent: string; count: number; percentage: number }>;
-  }>({
+  const { getToken } = useAuth();
+  const { data, isLoading, error, refetch } = useQuery<HealthData>({
     queryKey: ['dashboard-health'],
-    queryFn: async () => {
-      const res = await fetch(`${API_URL}/api/dashboard/health?days=30`);
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
-    },
+    queryFn: () => apiRequest('/api/dashboard/health-data', getToken),
   });
 
-  const INTENT_COLORS = ['#FF6B2C', '#3B28CC', '#2D6A4F', '#FFB703', '#E63946', '#00B4D8'];
+  /* Safely transform API shape into renderable arrays */
+  const activityDays = (data?.activityChart?.labels || []).map((label, i) => ({
+    date: label,
+    count: data?.activityChart?.data?.[i] ?? 0,
+  }));
+
+  const medDays = (data?.medicationAdherence?.labels || []).map((label, i) => ({
+    date: label,
+    taken: data?.medicationAdherence?.taken?.[i] ?? 0,
+    missed: data?.medicationAdherence?.missed?.[i] ?? 0,
+  }));
 
   return (
-    <div className="health-page">
-      <h2 className="health-page__title">Health Overview</h2>
-      <p className="health-page__subtitle">30-day activity and medication adherence</p>
+    <div className="hp">
+      <div className="hp__head">
+        <h2 className="hp__title">Health Overview</h2>
+        <p className="hp__sub">Activity and medication adherence</p>
+      </div>
 
       {isLoading ? (
-        <div className="health-page__skeletons">
+        <div className="hp__skels">
           {[1, 2, 3].map(i => (
-            <div key={i} className="health-skeleton" />
+            <div key={i} className="hp__skel" />
           ))}
         </div>
       ) : error ? (
-        <div className="health-page__error">
-          <AlertTriangle size={24} />
-          <p>Failed to load health data</p>
-          <button onClick={() => refetch()}>Retry</button>
+        <div className="hp__error">
+          <div className="hp__error-card">
+            <AlertTriangle size={28} />
+            <p>Failed to load health data</p>
+            <button onClick={() => refetch()} className="hp__retry">Retry</button>
+          </div>
         </div>
       ) : (
         <>
-          {/* Activity Chart */}
-          <div className="health-card">
-            <h3>Voice Activity (30 days)</h3>
-            <div className="health-chart">
-              {(data?.activityByDay || []).length === 0 ? (
-                <div className="health-chart__empty">
-                  <Activity size={20} />
+          {/* Voice Activity Chart */}
+          <div className="hp__card">
+            <div className="hp__card-head">
+              <div className="hp__card-icon hp__card-icon--indigo">
+                <Activity size={16} />
+              </div>
+              <h3>Voice Activity</h3>
+              <span className="hp__card-badge">30 days</span>
+            </div>
+            <div className="hp__chart">
+              {activityDays.length === 0 ? (
+                <div className="hp__chart-empty">
+                  <Activity size={20} strokeWidth={1.5} />
                   <span>No activity data yet</span>
                 </div>
               ) : (
-                <div className="health-chart__bars">
-                  {(data?.activityByDay || []).map((day, i) => {
-                    const max = Math.max(...(data?.activityByDay || []).map(d => d.commandCount), 1);
+                <div className="hp__chart-bars">
+                  {activityDays.map((day, i) => {
+                    const max = Math.max(...activityDays.map(d => d.count), 1);
                     return (
-                      <div key={i} className="health-chart__bar-wrapper" title={`${day.date}: ${day.commandCount} commands`}>
-                        <div className="health-chart__bar" style={{ height: `${(day.commandCount / max) * 100}%` }} />
+                      <div key={i} className="hp__chart-col" title={`${day.date}: ${day.count} commands`}>
+                        <div className="hp__chart-bar" style={{ height: `${(day.count / max) * 100}%` }} />
                       </div>
                     );
                   })}
@@ -64,89 +85,277 @@ export default function HealthPage() {
             </div>
           </div>
 
-          {/* Bottom row: adherence + intent */}
-          <div className="health-page__row">
-            <div className="health-card">
-              <h3>Medication Adherence (14 days)</h3>
-              {(data?.medicationAdherence || []).length === 0 ? (
-                <div className="health-chart__empty"><span>No medication data yet</span></div>
+          {/* Bottom Row */}
+          <div className="hp__row">
+            {/* Medication Adherence */}
+            <div className="hp__card">
+              <div className="hp__card-head">
+                <div className="hp__card-icon hp__card-icon--green">
+                  <Heart size={16} />
+                </div>
+                <h3>Medication Adherence</h3>
+              </div>
+              {medDays.length === 0 ? (
+                <div className="hp__chart-empty"><span>No medication data yet</span></div>
               ) : (
-                <div className="health-chart__bars health-chart__bars--stacked">
-                  {(data?.medicationAdherence || []).slice(-14).map((day, i) => {
-                    const total = day.taken + day.missed;
-                    return (
-                      <div key={i} className="health-chart__bar-wrapper" title={`${day.date}: ${day.taken} taken, ${day.missed} missed`}>
-                        {total > 0 && (
-                          <>
-                            <div className="health-chart__bar health-chart__bar--jade" style={{ height: `${(day.taken / total) * 100}%` }} />
-                            <div className="health-chart__bar health-chart__bar--rose" style={{ height: `${(day.missed / total) * 100}%` }} />
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="hp__chart hp__chart--sm">
+                  <div className="hp__chart-bars">
+                    {medDays.slice(-14).map((day, i) => {
+                      const total = day.taken + day.missed;
+                      return (
+                        <div key={i} className="hp__chart-col" title={`${day.date}: ${day.taken} taken, ${day.missed} missed`}>
+                          {total > 0 && (
+                            <>
+                              <div className="hp__chart-bar hp__chart-bar--green" style={{ height: `${(day.taken / total) * 100}%` }} />
+                              <div className="hp__chart-bar hp__chart-bar--red" style={{ height: `${(day.missed / total) * 100}%` }} />
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="health-card">
-              <h3>Command Types</h3>
-              {(data?.intentBreakdown || []).length === 0 ? (
-                <div className="health-chart__empty"><span>No commands yet</span></div>
-              ) : (
-                <div className="health-intents">
-                  {(data?.intentBreakdown || []).map((intent, i) => (
-                    <div key={intent.intent} className="health-intent">
-                      <div className="health-intent__bar-bg">
-                        <div className="health-intent__bar" style={{ width: `${intent.percentage}%`, background: INTENT_COLORS[i % INTENT_COLORS.length] }} />
-                      </div>
-                      <span className="health-intent__label">{intent.intent}</span>
-                      <span className="health-intent__pct">{intent.percentage}%</span>
-                    </div>
-                  ))}
+            {/* Health Notes */}
+            <div className="hp__card">
+              <div className="hp__card-head">
+                <div className="hp__card-icon hp__card-icon--amber">
+                  <BarChart3 size={16} />
                 </div>
-              )}
+                <h3>Health Notes</h3>
+              </div>
+              <div className="hp__chart-empty">
+                <span>No health notes yet</span>
+              </div>
             </div>
           </div>
         </>
       )}
 
-      <style jsx>{`
-        .health-page { max-width: 1000px; }
-        .health-page__title { font-size: 22px !important; font-weight: 700 !important; margin-bottom: 4px; color: var(--text-primary); }
-        .health-page__subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
-
-        .health-card { padding: 20px; border-radius: 16px; background: var(--glass-bg); border: 1px solid var(--glass-border); margin-bottom: 16px; }
-        .health-card h3 { font-size: 14px !important; font-weight: 600 !important; color: var(--text-secondary); margin: 0 0 16px; }
-
-        .health-chart { height: 180px; }
-        .health-chart__empty { display: flex; align-items: center; justify-content: center; gap: 8px; height: 100%; color: var(--text-muted); font-size: 14px; }
-        .health-chart__bars { display: flex; align-items: flex-end; gap: 3px; height: 100%; }
-        .health-chart__bars--stacked { align-items: flex-end; }
-        .health-chart__bar-wrapper { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: default; }
-        .health-chart__bar { border-radius: 2px 2px 0 0; background: #FF6B2C; min-height: 2px; transition: height 0.3s; opacity: 0.8; }
-        .health-chart__bar--jade { background: #2D6A4F; }
-        .health-chart__bar--rose { background: #E63946; }
-
-        .health-page__row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-        .health-intents { display: flex; flex-direction: column; gap: 12px; }
-        .health-intent { display: flex; align-items: center; gap: 10px; }
-        .health-intent__bar-bg { flex: 1; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.06); overflow: hidden; }
-        :global(.light) .health-intent__bar-bg { background: rgba(27,42,74,0.06); }
-        .health-intent__bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
-        .health-intent__label { font-size: 12px; color: var(--text-secondary); min-width: 80px; }
-        .health-intent__pct { font-size: 12px; color: var(--text-muted); font-weight: 600; min-width: 32px; text-align: right; }
-
-        .health-page__skeletons { display: flex; flex-direction: column; gap: 16px; }
-        .health-skeleton { height: 200px; border-radius: 16px; background: var(--glass-bg); border: 1px solid var(--glass-border); animation: shimmer 1.5s infinite; background-size: 200%; }
-        @keyframes shimmer { 0% { background-position: 200%; } 100% { background-position: -200%; } }
-
-        .health-page__error { text-align: center; padding: 60px; color: #E63946; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .health-page__error button { padding: 8px 20px; border-radius: 10px; background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.2); color: #E63946; cursor: pointer; }
-
-        @media (max-width: 700px) { .health-page__row { grid-template-columns: 1fr; } }
-      `}</style>
+      <style jsx>{`${healthStyles}`}</style>
     </div>
   );
 }
+
+const healthStyles = `
+  /* ─── HEADER ─── */
+  .hp__head { margin-bottom: 24px; text-align: center; }
+
+  .hp__title {
+    font-size: clamp(20px, 3vw, 26px) !important;
+    font-weight: 800 !important;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+
+  .hp__sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0;
+    font-family: var(--font-display);
+  }
+
+  /* ─── CARD ─── */
+  .hp__card {
+    padding: 20px;
+    border-radius: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 14px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  }
+
+  .hp__card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .hp__card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+  }
+
+  .hp__card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hp__card-icon--indigo {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.05));
+    color: #6366F1;
+  }
+
+  .hp__card-icon--green {
+    background: linear-gradient(135deg, rgba(var(--sah-accent-2-rgb), 0.15), rgba(var(--sah-accent-2-rgb), 0.05));
+    color: var(--sah-accent-2);
+  }
+
+  .hp__card-icon--amber {
+    background: linear-gradient(135deg, rgba(var(--sah-accent-1-rgb), 0.15), rgba(var(--sah-accent-1-rgb), 0.05));
+    color: var(--sah-accent-1);
+  }
+
+  .hp__card-head h3 {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    flex: 1;
+  }
+
+  .hp__card-badge {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-family: var(--font-display);
+  }
+
+  /* ─── CHART ─── */
+  .hp__chart { height: 160px; }
+  .hp__chart--sm { height: 120px; }
+
+  .hp__chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 100px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: var(--font-display);
+  }
+
+  .hp__chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 100%;
+  }
+
+  .hp__chart-col {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    cursor: default;
+  }
+
+  .hp__chart-bar {
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(180deg, var(--sah-accent-1), rgba(var(--sah-accent-1-rgb), 0.4));
+    min-height: 2px;
+    transition: height var(--duration-slow) var(--ease-fluid);
+    opacity: 0.85;
+  }
+
+  .hp__chart-bar--green {
+    background: linear-gradient(180deg, var(--sah-accent-2), rgba(var(--sah-accent-2-rgb), 0.5));
+  }
+
+  .hp__chart-bar--red {
+    background: linear-gradient(180deg, rgba(230, 57, 70, 0.9), rgba(230, 57, 70, 0.4));
+  }
+
+  /* ─── ROW ─── */
+  .hp__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .hp__row .hp__card { margin-bottom: 0; }
+
+  /* ─── SKELETON ─── */
+  .hp__skels {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .hp__skel {
+    height: 200px;
+    border-radius: 20px;
+    background: linear-gradient(90deg, var(--glass-bg) 0%, var(--glass-bg-hover) 50%, var(--glass-bg) 100%);
+    background-size: 200%;
+    border: 1px solid var(--glass-border);
+    animation: hp-shimmer 1.5s infinite;
+  }
+
+  @keyframes hp-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ─── ERROR ─── */
+  .hp__error {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .hp__error-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px;
+    border-radius: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .hp__error-card p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 14px;
+    font-family: var(--font-display);
+  }
+
+  .hp__retry {
+    padding: 8px 24px;
+    border-radius: var(--radius-full);
+    background: rgba(var(--sah-accent-1-rgb), 0.1);
+    border: 1px solid rgba(var(--sah-accent-1-rgb), 0.2);
+    color: var(--sah-accent-1);
+    cursor: pointer;
+    font-weight: 600;
+    font-family: var(--font-display);
+    transition: all 0.2s;
+  }
+
+  .hp__retry:hover {
+    background: rgba(var(--sah-accent-1-rgb), 0.15);
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 700px) {
+    .hp__row {
+      grid-template-columns: 1fr;
+    }
+  }
+`;

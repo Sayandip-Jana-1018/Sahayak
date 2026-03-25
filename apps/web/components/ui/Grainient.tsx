@@ -110,14 +110,36 @@ function GrainientInner({ className = '' }: GrainientProps) {
   const activeTheme = useThemeStore((s) => s.activeTheme);
   const programRef = useRef<Program | null>(null);
 
+  // Determine if light mode; override the dark orb color to white
+  const getEffectiveColor1 = () => {
+    const isLight = document.documentElement.classList.contains('light') ||
+                    document.documentElement.getAttribute('data-theme') === 'light';
+    return isLight ? '#FFFFFF' : activeTheme.grainColor1;
+  };
+
   // Update uniforms when theme changes (without remounting)
   useEffect(() => {
     if (programRef.current) {
       const p = programRef.current;
-      (p.uniforms.uColor1 as { value: Float32Array }).value = new Float32Array(hexToRgb(activeTheme.grainColor1));
+      (p.uniforms.uColor1 as { value: Float32Array }).value = new Float32Array(hexToRgb(getEffectiveColor1()));
       (p.uniforms.uColor2 as { value: Float32Array }).value = new Float32Array(hexToRgb(activeTheme.grainColor2));
       (p.uniforms.uColor3 as { value: Float32Array }).value = new Float32Array(hexToRgb(activeTheme.grainColor3));
     }
+  }, [activeTheme]);
+
+  // Watch for light/dark mode toggle and update the dark orb color
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      if (programRef.current) {
+        (programRef.current.uniforms.uColor1 as { value: Float32Array }).value =
+          new Float32Array(hexToRgb(getEffectiveColor1()));
+      }
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
+    return () => observer.disconnect();
   }, [activeTheme]);
 
   useEffect(() => {
@@ -164,7 +186,7 @@ function GrainientInner({ className = '' }: GrainientProps) {
         uSaturation: { value: 1.0 },
         uCenterOffset: { value: new Float32Array([0.0, 0.0]) },
         uZoom: { value: 0.9 },
-        uColor1: { value: new Float32Array(hexToRgb(activeTheme.grainColor1)) },
+        uColor1: { value: new Float32Array(hexToRgb(getEffectiveColor1())) },
         uColor2: { value: new Float32Array(hexToRgb(activeTheme.grainColor2)) },
         uColor3: { value: new Float32Array(hexToRgb(activeTheme.grainColor3)) },
       },

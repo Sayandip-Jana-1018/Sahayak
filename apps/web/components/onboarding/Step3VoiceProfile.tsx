@@ -186,6 +186,15 @@ export function Step3VoiceProfile() {
         Read 3 sentences aloud to help Sahayak recognize {formData.userType === 'self' ? 'your' : "their"} voice
       </p>
 
+      {/* Info Notice */}
+      <div className="step3__info-box">
+        <div className="step3__info-icon">💡</div>
+        <div className="step3__info-text">
+          <strong>Why is this needed?</strong><br/>
+          Recording your voice helps Sahayak recognize you securely and ignore background noise like the TV or other people talking. If you skip this, voice features will still work, but may be slightly less accurate.
+        </div>
+      </div>
+
       {/* Progress */}
       <div className="step3__progress">
         {[0, 1, 2].map((i) => (
@@ -259,7 +268,7 @@ export function Step3VoiceProfile() {
             nextStep();
           }}
         >
-          Skip voice setup (recommended to complete)
+          Skip for now (Set up later in settings)
         </button>
       )}
 
@@ -273,21 +282,55 @@ export function Step3VoiceProfile() {
           font-size: 32px !important;
           font-weight: 800 !important;
           letter-spacing: -0.02em;
-          margin-bottom: 12px;
+          margin-bottom: 8px;
           color: var(--text-primary);
         }
 
         .step3__subtitle {
           color: var(--text-secondary);
           font-size: 15px;
-          margin-bottom: 32px;
+          margin-bottom: 24px;
+        }
+
+        .step3__info-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          padding: 16px 20px;
+          border-radius: 16px;
+          background: rgba(45, 106, 79, 0.08);
+          border: 1px solid rgba(45, 106, 79, 0.2);
+          text-align: center;
+          max-width: 580px;
+          margin: 0 auto 32px;
+        }
+
+        :global(.light) .step3__info-box,
+        :global([data-theme="light"]) .step3__info-box {
+          background: rgba(45, 106, 79, 0.05);
+        }
+
+        .step3__info-icon {
+          font-size: 24px;
+        }
+
+        .step3__info-text {
+          font-size: 13px;
+          line-height: 1.5;
+          color: var(--text-secondary);
+        }
+
+        .step3__info-text strong {
+          color: #2D6A4F;
+          font-size: 14px;
         }
 
         .step3__progress {
           display: flex;
           justify-content: center;
-          gap: 24px;
-          margin-bottom: 32px;
+          gap: 20px;
+          margin-bottom: 24px;
         }
 
         .step3__progress-item {
@@ -305,6 +348,7 @@ export function Step3VoiceProfile() {
         .step3__progress-item--active {
           border-color: #FF6B2C;
           color: #FF6B2C;
+          background: rgba(255, 107, 44, 0.05);
         }
 
         .step3__progress-item--done {
@@ -314,33 +358,40 @@ export function Step3VoiceProfile() {
         }
 
         .step3__card {
-          padding: 40px;
-          border-radius: 24px;
+          padding: 32px 24px;
+          border-radius: 20px;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          margin-bottom: 24px;
+          margin-bottom: 20px;
           box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+          max-width: 580px;
+          margin-left: auto;
+          margin-right: auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         :global(.light) .step3__card,
         :global([data-theme="light"]) .step3__card {
-          background: rgba(255, 255, 255, 0.5);
+          background: rgba(255, 255, 255, 0.6);
           border: 1px solid rgba(27, 42, 74, 0.08);
           box-shadow: 0 12px 40px rgba(27, 42, 74, 0.05);
         }
 
         .step3__sentence {
-          font-size: 22px;
+          font-size: 20px;
           font-weight: 600;
           color: var(--text-primary);
-          line-height: 1.5;
-          margin-bottom: 8px;
+          line-height: 1.4;
+          margin-bottom: 6px;
+          width: 100%;
         }
 
         .step3__translation {
-          font-size: 14px;
+          font-size: 13px;
           color: var(--text-muted);
-          margin-bottom: 28px;
+          margin-bottom: 20px;
           font-style: italic;
         }
 
@@ -349,30 +400,30 @@ export function Step3VoiceProfile() {
           flex-direction: column;
           align-items: center;
           gap: 12px;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
         }
 
         .step3__mic-btn {
-          width: 88px;
-          height: 88px;
+          width: 72px;
+          height: 72px;
           border-radius: 50%;
           border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.03);
+          background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
           color: var(--text-primary);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
           position: relative;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
 
         :global(.light) .step3__mic-btn,
         :global([data-theme="light"]) .step3__mic-btn {
           border-color: rgba(27,42,74,0.15);
-          background: rgba(255,255,255,0.7);
-          box-shadow: 0 8px 32px rgba(27,42,74,0.08);
+          background: #FFFFFF;
+          box-shadow: 0 8px 24px rgba(27,42,74,0.06);
         }
 
         .step3__mic-btn:hover {
@@ -458,18 +509,32 @@ export function Step3VoiceProfile() {
         }
 
         .step3__skip {
-          background: none;
-          border: none;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
           color: var(--text-muted);
           font-size: 13px;
           cursor: pointer;
-          text-decoration: underline;
           font-family: var(--font-body);
           margin-top: 8px;
+          padding: 8px 20px;
+          border-radius: 12px;
+          transition: all 0.2s;
+        }
+
+        :global(.light) .step3__skip,
+        :global([data-theme="light"]) .step3__skip {
+          background: rgba(27,42,74,0.04);
+          border-color: rgba(27,42,74,0.1);
         }
 
         .step3__skip:hover {
-          color: var(--text-secondary);
+          color: var(--text-primary);
+          background: rgba(255,255,255,0.08);
+        }
+
+        :global(.light) .step3__skip:hover,
+        :global([data-theme="light"]) .step3__skip:hover {
+          background: rgba(27,42,74,0.08);
         }
       `}</style>
     </div>

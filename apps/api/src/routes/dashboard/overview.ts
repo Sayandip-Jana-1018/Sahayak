@@ -14,11 +14,33 @@ export async function dashboardOverviewRoutes(app: FastifyInstance) {
         const [dbUser] = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
         if (dbUser) {
           userId = dbUser.id;
-          const [link] = await db.select().from(caregiverLinks)
-            .where(eq(caregiverLinks.caregiverId, dbUser.id))
-            .limit(1);
-          if (link) {
-            elderlyProfileId = link.elderlyProfileId;
+
+          // Priority 1: Cookie-based profile selection (set by profile selector page)
+          const cookieHeader = request.headers.cookie || '';
+          const selectedMatch = cookieHeader.match(/sahayak_selected_profile=([^;]+)/);
+          const selectedProfileId = selectedMatch?.[1];
+
+          if (selectedProfileId) {
+            // Verify user has access to this profile
+            const [validLink] = await db.select().from(caregiverLinks)
+              .where(and(
+                eq(caregiverLinks.caregiverId, dbUser.id),
+                eq(caregiverLinks.elderlyProfileId, selectedProfileId),
+              ))
+              .limit(1);
+            if (validLink) {
+              elderlyProfileId = selectedProfileId;
+            }
+          }
+
+          // Priority 2: Fall back to first link
+          if (!elderlyProfileId) {
+            const [link] = await db.select().from(caregiverLinks)
+              .where(eq(caregiverLinks.caregiverId, dbUser.id))
+              .limit(1);
+            if (link) {
+              elderlyProfileId = link.elderlyProfileId;
+            }
           }
         }
       }

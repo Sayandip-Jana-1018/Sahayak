@@ -315,6 +315,7 @@ export const deviceRegistrations = pgTable('device_registrations', {
   androidVersion: text('android_version'),
   appVersion: text('app_version'),
   fcmToken: text('fcm_token'),
+  isActive: boolean('is_active').default(true),
   lastPingAt: timestamp('last_ping_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (t) => [
@@ -375,5 +376,108 @@ export const voiceProfileSamplesRelations = relations(voiceProfileSamples, ({ on
   elderlyProfile: one(elderlyProfiles, {
     fields: [voiceProfileSamples.elderlyProfileId],
     references: [elderlyProfiles.id],
+  }),
+}));
+
+// ═══════════════════════════════════════════
+// CONTENT LIBRARY (Studio — NGO local references)
+// ═══════════════════════════════════════════
+
+export const contentLibrary = pgTable('content_library', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organizationId: uuid('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(), // hospitals | government_offices | emergency_numbers | social_services
+  name: text('name').notNull(),
+  phone: text('phone'),
+  address: text('address'),
+  state: text('state'),
+  language: text('language').default('hi'),
+  operatingHours: text('operating_hours'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('content_lib_org_idx').on(t.organizationId),
+  index('content_lib_category_idx').on(t.category),
+]);
+
+// ═══════════════════════════════════════════
+// CUSTOM VOICE COMMANDS (Studio — per org)
+// ═══════════════════════════════════════════
+
+export const customVoiceCommands = pgTable('custom_voice_commands', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organizationId: uuid('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  triggerPhrase: text('trigger_phrase').notNull(),
+  responseType: text('response_type').notNull(), // phone_call | sms | text_response | url
+  responseValue: text('response_value').notNull(),
+  language: text('language').default('hi'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('voice_cmd_org_idx').on(t.organizationId),
+]);
+
+// ═══════════════════════════════════════════
+// AI USAGE LOGS (Admin — cost tracking)
+// ═══════════════════════════════════════════
+
+export const aiUsageLogs = pgTable('ai_usage_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  feature: text('feature').notNull(), // voice_demo | ocr | companion | schemes | emotion
+  tokensUsed: integer('tokens_used').default(0),
+  processingMs: integer('processing_ms').default(0),
+  language: text('language'),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('ai_usage_feature_idx').on(t.feature),
+  index('ai_usage_created_idx').on(t.createdAt),
+]);
+
+// ═══════════════════════════════════════════
+// ANNOUNCEMENTS (Admin — broadcast messages)
+// ═══════════════════════════════════════════
+
+export const announcements = pgTable('announcements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  target: text('target').default('all'), // all | role:ngo_admin | state:maharashtra
+  priority: text('priority').default('info'), // info | warning | critical
+  createdByUserId: uuid('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('announcements_created_idx').on(t.createdAt),
+]);
+
+// ═══════════════════════════════════════════
+// NEW TABLE RELATIONS (Phase 3)
+// ═══════════════════════════════════════════
+
+export const contentLibraryRelations = relations(contentLibrary, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [contentLibrary.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export const customVoiceCommandsRelations = relations(customVoiceCommands, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [customVoiceCommands.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export const aiUsageLogsRelations = relations(aiUsageLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [aiUsageLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const announcementsRelations = relations(announcements, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [announcements.createdByUserId],
+    references: [users.id],
   }),
 }));

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useCallback, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check } from 'lucide-react';
 import { useOnboardingStore } from '@/store/onboardingStore';
-import { useUser } from '@clerk/nextjs';
+import { useUser, useAuth } from '@clerk/nextjs';
+import { apiRequest } from '@/lib/api';
 import { Step1UserType } from '@/components/onboarding/Step1UserType';
 import { Step2ElderlyDetails } from '@/components/onboarding/Step2ElderlyDetails';
 import { Step3VoiceProfile } from '@/components/onboarding/Step3VoiceProfile';
@@ -17,7 +18,45 @@ const STEP_LABELS = ['Who?', 'Details', 'Voice', 'Install', 'Done'];
 export default function OnboardingPage() {
   const router = useRouter();
   const { user } = useUser();
+  const { getToken } = useAuth();
   const { currentStep, setStep, nextStep, prevStep, formData } = useOnboardingStore();
+  const searchParams = useSearchParams();
+  const isAddingElder = searchParams.get('addElder') === 'true';
+  const [checking, setChecking] = useState(!isAddingElder);
+
+  /* ── Auto-redirect if user already onboarded (DB check) — skip if adding new elder ── */
+  useEffect(() => {
+    if (isAddingElder) return; // Skip check—user intentionally came here to add another elder
+    let cancelled = false;
+    async function checkStatus() {
+      try {
+        const res = await apiRequest<{ onboarded: boolean; profileId?: string }>(
+          '/api/onboarding/status',
+          getToken,
+        );
+        if (!cancelled && res.onboarded) {
+          document.cookie = 'sahayak_onboarding_done=1; path=/; max-age=31536000; SameSite=Lax';
+          window.location.href = '/dashboard/select-profile';
+          return;
+        }
+      } catch {
+        // If status check fails, just show onboarding normally
+      }
+      if (!cancelled) setChecking(false);
+    }
+    checkStatus();
+    return () => { cancelled = true; };
+  }, [getToken, isAddingElder]);
+
+  /* Show a loading state while checking */
+  if (checking) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid var(--glass-border)', borderTopColor: 'var(--sah-accent-1)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   const isStepValid = useCallback((): boolean => {
     switch (currentStep) {
@@ -70,13 +109,14 @@ export default function OnboardingPage() {
 
       {/* Step indicators with connecting progress bar */}
       <div className="onboarding__steps">
-        {/* Background track line */}
-        <div className="onboarding__steps-track" />
-        {/* Filled progress line */}
-        <div
-          className="onboarding__steps-fill"
-          style={{ width: `${((currentStep - 1) / (STEP_LABELS.length - 1)) * 100}%` }}
-        />
+        {/* Background track and fill container */}
+        <div className="onboarding__steps-line-container">
+          <div className="onboarding__steps-track" />
+          <div
+            className="onboarding__steps-fill"
+            style={{ width: `${((currentStep - 1) / (STEP_LABELS.length - 1)) * 100}%` }}
+          />
+        </div>
         {STEP_LABELS.map((label, i) => {
           const stepNum = i + 1;
           const isCompleted = stepNum < currentStep;
@@ -168,7 +208,6 @@ export default function OnboardingPage() {
           padding: 48px;
           box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
           position: relative;
-          overflow: hidden;
         }
 
         :global(.light) .onboarding__glass-panel,
@@ -210,15 +249,23 @@ export default function OnboardingPage() {
           width: 100%;
         }
 
-        .onboarding__steps-track {
+        .onboarding__steps-line-container {
           position: absolute;
           top: 16px;
           left: 16px;
           right: 16px;
           height: 2px;
+          z-index: 0;
+        }
+
+        .onboarding__steps-track {
+          width: 100%;
+          height: 100%;
           border-radius: 2px;
           background: rgba(255, 255, 255, 0.06);
-          z-index: 0;
+          position: absolute;
+          top: 0;
+          left: 0;
         }
 
         :global(.light) .onboarding__steps-track,
@@ -228,9 +275,9 @@ export default function OnboardingPage() {
 
         .onboarding__steps-fill {
           position: absolute;
-          top: 16px;
-          left: 16px;
-          height: 2px;
+          top: 0;
+          left: 0;
+          height: 100%;
           border-radius: 2px;
           background: linear-gradient(90deg, #FF6B2C, #FF8F5E);
           box-shadow: 0 0 8px rgba(255, 107, 44, 0.4);

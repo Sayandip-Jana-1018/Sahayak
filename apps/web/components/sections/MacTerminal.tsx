@@ -37,6 +37,7 @@ export function MacTerminal({ scrollOpacity }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [shownLines, setShownLines] = useState<number[]>([]);
   const [started, setStarted] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
 
   // Start typing animation once visible (scrollOpacity near 1 means visible in hero)
   useEffect(() => {
@@ -48,15 +49,60 @@ export function MacTerminal({ scrollOpacity }: Props) {
     }
   }, [started]);
 
+  // Robust video playback — retry on error, force play on canplay
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const tryPlay = () => {
+      el.play().catch(() => {
+        // Some browsers block autoplay; muted + playsInline should fix it
+        // but if it still fails, we'll show the fallback
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(tryPlay, 500 * retryCount);
+        } else {
+          setVideoFailed(true);
+        }
+      });
+    };
+
+    const onCanPlay = () => {
+      if (scrollOpacity > 0.1) tryPlay();
+    };
+
+    const onError = () => {
+      // Video codec not supported on this device — show gradient fallback
+      setVideoFailed(true);
+    };
+
+    el.addEventListener('canplay', onCanPlay);
+    el.addEventListener('error', onError);
+
+    // Immediately try if already loaded
+    if (el.readyState >= 3 && scrollOpacity > 0.1) {
+      tryPlay();
+    }
+
+    return () => {
+      el.removeEventListener('canplay', onCanPlay);
+      el.removeEventListener('error', onError);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Play / pause video based on scroll
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || videoFailed) return;
     if (scrollOpacity > 0.1) {
       videoRef.current.play().catch(() => {});
     } else {
       videoRef.current.pause();
     }
-  }, [scrollOpacity]);
+  }, [scrollOpacity, videoFailed]);
 
   return (
     <div
@@ -161,11 +207,34 @@ export function MacTerminal({ scrollOpacity }: Props) {
               background: 'rgba(var(--sah-accent-1-rgb), 0.05)',
               mixBlendMode: 'screen',
             }} />
+            {/* Gradient fallback — always rendered behind video */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 0,
+              background: 'linear-gradient(135deg, #1a0a00 0%, #2d1810 30%, #1a2332 70%, #0a0a14 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {videoFailed && (
+                <div style={{
+                  textAlign: 'center', color: 'rgba(255,255,255,0.25)',
+                  fontFamily: 'ui-monospace, monospace', fontSize: 12,
+                }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>👵🏾</div>
+                  <div>Live Preview</div>
+                </div>
+              )}
+            </div>
             <video
               ref={videoRef}
               src="/videos/old.mp4"
-              muted loop playsInline
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.88 }}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                display: videoFailed ? 'none' : 'block', opacity: 0.88,
+              }}
             />
             {/* LIVE badge */}
             <div style={{
@@ -190,7 +259,7 @@ export function MacTerminal({ scrollOpacity }: Props) {
         {/* Status bar */}
         <div style={{
           padding: '7px 18px',
-          display: 'flex', gap: 20, alignItems: 'center',
+          display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center',
           borderTop: '1px solid rgba(255,255,255,0.05)',
           background: 'rgba(255,255,255,0.015)',
           flexWrap: 'wrap',
