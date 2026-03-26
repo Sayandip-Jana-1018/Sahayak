@@ -1,9 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../core/network/api_client.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
 import '../../../core/config/api_config.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../../shared/widgets/glass_button.dart';
 import '../../../shared/widgets/glass_card.dart';
 
 class Step4DeviceSetup extends StatefulWidget {
@@ -19,32 +25,33 @@ class Step4DeviceSetup extends StatefulWidget {
     this.relationship,
   });
 
-  final String   elderName;
-  final String   language;
-  final int?     ageYears;
-  final String?  city;
-  final String?  state;
-  final String?  phone;
-  final String?  relationship;
+  final String elderName;
+  final String language;
+  final int? ageYears;
+  final String? city;
+  final String? state;
+  final String? phone;
+  final String? relationship;
   final VoidCallback onComplete;
 
   @override
-  State<Step4DeviceSetup> createState() => _Step4State();
+  State<Step4DeviceSetup> createState() => _Step4DeviceSetupState();
 }
 
-class _Step4State extends State<Step4DeviceSetup>
+class _Step4DeviceSetupState extends State<Step4DeviceSetup>
     with SingleTickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
-  bool _submitting     = false;
-  bool _submitted      = false;
+  late final AnimationController _pulseCtrl;
+  bool _submitting = false;
+  bool _submitted = false;
   String? _error;
+  String _statusLine = 'Creating the elder profile securely...';
 
   @override
   void initState() {
     super.initState();
     _pulseCtrl = AnimationController(
-      vsync:    this,
-      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
     _submitProfile();
   }
@@ -56,115 +63,220 @@ class _Step4State extends State<Step4DeviceSetup>
   }
 
   Future<void> _submitProfile() async {
-    setState(() { _submitting = true; _error = null; });
+    setState(() {
+      _submitting = true;
+      _error = null;
+      _statusLine = 'Creating the elder profile securely...';
+    });
+
     try {
-      // POST create-profile
       final createResp = await ApiClient.instance.post(
         ApiConfig.onboardingCreate,
         data: {
-          'elderlyName':            widget.elderName,
-          'ageYears':               widget.ageYears ?? 65,
-          'state':                  (widget.state?.isNotEmpty ?? false) ? widget.state : 'Unknown',
-          if (widget.city != null && widget.city!.isNotEmpty)
-            'district':              widget.city,
-          if (widget.phone != null && widget.phone!.isNotEmpty)
+          'elderlyName': widget.elderName,
+          'ageYears': widget.ageYears ?? 65,
+          'state': (widget.state?.isNotEmpty ?? false) ? widget.state : 'Unknown',
+          if (widget.city?.isNotEmpty ?? false) 'district': widget.city,
+          if (widget.phone?.isNotEmpty ?? false)
             'emergencyContactPhone': widget.phone,
           'primaryLanguage': widget.language,
           'userType': widget.relationship == 'self' ? 'self' : 'family',
         },
       );
-      // Auto-select the created profile (skip /select-profile since there's only one)
+
       final profileId = createResp.data?['elderlyProfileId'] as String?;
-      if (profileId != null) {
-        AuthService.instance.setActiveProfile(profileId);
+      if (profileId == null) {
+        throw Exception('Profile creation did not return an elderly profile id.');
       }
-      // Mark onboarding complete — send full data since endpoint validates same schema
-      await ApiClient.instance.post(ApiConfig.onboardingComplete, data: {
-        'elderlyName':            widget.elderName,
-        'ageYears':               widget.ageYears ?? 65,
-        'state':                  (widget.state?.isNotEmpty ?? false) ? widget.state : 'Unknown',
-        'district':               (widget.city?.isNotEmpty ?? false) ? widget.city : '',
-        'primaryLanguage':        widget.language,
-        'userType':               widget.relationship == 'self' ? 'self' : 'family',
-        'emergencyContactName':   widget.elderName, // fallback
-        'emergencyContactPhone':  (widget.phone?.isNotEmpty ?? false) ? widget.phone : '9999999999',
-        'voiceProfileComplete':   false,
-        'voiceSampleIds':         <String>[],
-        'appInstalled':           true,
+
+      AuthService.instance.setActiveProfile(profileId);
+
+      setState(() {
+        _statusLine = 'Registering this phone as the elder device...';
       });
-      // Update local auth state so router allows navigation to /home
+
+      final packageInfo = await PackageInfo.fromPlatform();
+      final fcmToken = await NotificationService.instance.getFcmToken();
+
+      await ApiClient.instance.post(
+        ApiConfig.deviceRegister,
+        data: {
+          'elderlyProfileId': profileId,
+          'deviceModel': 'Android',
+          'androidVersion': Platform.operatingSystemVersion,
+          'appVersion': packageInfo.version,
+          'fcmToken': fcmToken,
+        },
+      );
+
+      setState(() {
+        _statusLine = 'Verifying sync with the dashboard and database...';
+      });
+
+      await ApiClient.instance.get('${ApiConfig.deviceStatus}/$profileId');
+
+      setState(() {
+        _statusLine = 'Finishing setup and unlocking Sahayak...';
+      });
+
+      await ApiClient.instance.post(
+        ApiConfig.onboardingComplete,
+        data: {
+          'elderlyName': widget.elderName,
+          'ageYears': widget.ageYears ?? 65,
+          'state': (widget.state?.isNotEmpty ?? false) ? widget.state : 'Unknown',
+          'district': (widget.city?.isNotEmpty ?? false) ? widget.city : '',
+          'primaryLanguage': widget.language,
+          'userType': widget.relationship == 'self' ? 'self' : 'family',
+          'emergencyContactName': widget.elderName,
+          if (widget.phone?.isNotEmpty ?? false)
+            'emergencyContactPhone': widget.phone,
+          'voiceProfileComplete': false,
+          'voiceSampleIds': <String>[],
+          'appInstalled': true,
+        },
+      );
+
       AuthService.instance.markOnboardingComplete();
-      if (mounted) setState(() { _submitted = true; _submitting = false; });
-    } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _submitting = false; });
+
+      if (mounted) {
+        setState(() {
+          _submitted = true;
+          _submitting = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _error = error.toString();
+          _submitting = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = Theme.of(context).colorScheme.primary;
 
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (_submitting) ...[
-            AnimatedBuilder(
-              animation: _pulseCtrl,
-              builder: (_, child) => Transform.scale(
-                scale: 1.0 + _pulseCtrl.value * 0.12,
-                child: child,
-              ),
-              child: Icon(
-                Icons.cloud_sync_rounded,
-                size:  80,
-                color: accent,
+            AccentGlassCard(
+              accent: accent,
+              child: Column(
+                children: [
+                  AnimatedBuilder(
+                    animation: _pulseCtrl,
+                    builder: (_, child) => Transform.scale(
+                      scale: 1 + (_pulseCtrl.value * 0.08),
+                      child: child,
+                    ),
+                    child: Container(
+                      width: 92,
+                      height: 92,
+                      decoration: BoxDecoration(
+                        gradient: SahayakColors.primaryGradient(
+                          accent,
+                          SahayakColors.ashokaGreen,
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.2),
+                            blurRadius: 28,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.cloud_sync_rounded,
+                        size: 42,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Setting up Sahayak',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _statusLine,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-            Text('प्रोफाइल बन रही है...',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text('${widget.elderName} की जानकारी सुरक्षित हो रही है',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center),
           ] else if (_submitted) ...[
-            const Icon(Icons.check_circle_rounded,
-                size: 80, color: SahayakColors.successGreen)
-                .animate()
-                .scale(duration: 600.ms, curve: Curves.elasticOut),
-            const SizedBox(height: 24),
-            Text('तैयार है! 🎉',
-                style: Theme.of(context).textTheme.headlineMedium)
-                .animate().fadeIn(delay: 300.ms),
-            const SizedBox(height: 8),
-            Text('${widget.elderName} की प्रोफाइल बन गई है',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center)
-                .animate().fadeIn(delay: 400.ms),
-            const SizedBox(height: 40),
-            FilledButton.icon(
-              onPressed: widget.onComplete,
-              icon:  const Icon(Icons.home_rounded),
-              label: const Text('डैशबोर्ड पर जाएं'),
-            ).animate().fadeIn(delay: 600.ms)
-             .slideY(begin: 0.3, end: 0, delay: 600.ms,
-                 duration: 400.ms, curve: Curves.easeOut),
+            AccentGlassCard(
+              accent: SahayakColors.successGreen,
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 88,
+                    color: SahayakColors.successGreen,
+                  ).animate().scale(
+                        duration: 600.ms,
+                        curve: Curves.easeOutBack,
+                      ),
+                  const SizedBox(height: 22),
+                  Text(
+                    'Everything is ready',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '${widget.elderName} can now use Sahayak on this phone.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 22),
+                  GlassButton(
+                    label: 'Open dashboard',
+                    icon: Icons.arrow_forward_rounded,
+                    onPressed: widget.onComplete,
+                  ),
+                ],
+              ),
+            ),
           ] else if (_error != null) ...[
-            const Icon(Icons.error_outline_rounded,
-                size: 64, color: SahayakColors.sosRed),
-            const SizedBox(height: 16),
-            Text('कुछ गलत हुआ',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(_error!,
-                style: const TextStyle(color: SahayakColors.sosRed)),
-            const SizedBox(height: 24),
-            OutlinedButton(
-              onPressed: _submitProfile,
-              child:     const Text('फिर से कोशिश करें'),
+            GlassCard(
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 72,
+                    color: SahayakColors.sosRed,
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Setup could not finish',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
+                    style: const TextStyle(color: SahayakColors.sosRed),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 22),
+                  GlassButton(
+                    label: 'Try again',
+                    onPressed: _submitProfile,
+                  ),
+                ],
+              ),
             ),
           ],
         ],

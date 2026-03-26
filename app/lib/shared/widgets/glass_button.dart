@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
-import '../../core/theme/colors.dart';
 
 /// Glassmorphic pill button — used for prominent CTAs
 class GlassButton extends StatefulWidget {
@@ -33,7 +32,6 @@ class _GlassButtonState extends State<GlassButton> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = Theme.of(context).colorScheme.primary;
     final grad   = widget.gradient ??
         LinearGradient(

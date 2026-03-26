@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/colors.dart';
-import '../../../shared\models/models.dart';
-import '../../../shared\widgets/glass_card.dart';
-import '../../../shared\widgets/shimmer_loader.dart';
+import '../../../shared/models/models.dart';
+import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/widgets/shimmer_loader.dart';
 import '../bloc/health_bloc.dart';
 
 class HealthScreen extends StatefulWidget {

@@ -6,7 +6,7 @@ export type SupportedLanguage = 'hi' | 'ta' | 'bn' | 'mr' | 'te' | 'kn' | 'gu' |
 
 export type UserRole = 'family' | 'elderly' | 'ngo_admin' | 'sys_admin';
 
-export type SOSTriggerType = 'voice' | 'shake' | 'inactivity' | 'fall';
+export type SOSTriggerType = 'button' | 'voice' | 'shake' | 'inactivity' | 'fall';
 
 export type SOSSeverity = 'low' | 'medium' | 'high' | 'critical';
 

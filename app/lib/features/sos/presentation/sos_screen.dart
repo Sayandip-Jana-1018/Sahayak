@@ -5,9 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/colors.dart';
-import '../../../shared\widgets/glass_card.dart';
-import '../../../shared\widgets/shimmer_loader.dart';
-import '../../../shared\widgets/sos_fab.dart';
+import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/widgets/shimmer_loader.dart';
+import '../../../shared/widgets/sos_fab.dart';
 import '../bloc/sos_bloc.dart';
 
 class SosScreen extends StatefulWidget {
@@ -95,7 +95,7 @@ class _SosScreenState extends State<SosScreen> {
     if (filter == 'all') return events;
     if (filter == 'active') return events.where((event) => !event.isResolved).toList();
     if (filter == 'resolved') return events.where((event) => event.isResolved).toList();
-    return events.where((event) => (event.triggerType ?? 'manual') == filter).toList();
+    return events.where((event) => (event.triggerType ?? 'button') == filter).toList();
   }
 }
 
@@ -146,7 +146,7 @@ class _FilterRow extends StatelessWidget {
       ('resolved', 'Resolved'),
       ('voice', 'Voice'),
       ('shake', 'Shake'),
-      ('manual', 'Button'),
+      ('button', 'Button'),
     ];
 
     return SizedBox(

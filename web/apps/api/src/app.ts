@@ -28,6 +28,7 @@ import { deviceRoutes } from './routes/device/index';
 import { voiceProfileRoutes } from './routes/voice-profile/index';
 import { healthNotesRoutes } from './routes/health-notes/index';
 import { appointmentsRoutes } from './routes/appointments/index';
+import { userDeviceRoutes } from './routes/user-devices/register';
 import { socketPlugin } from './plugins/socket';
 import { studioOverviewRoutes } from './routes/studio/overview';
 import { studioCommandsRoutes } from './routes/studio/commands';
@@ -125,6 +126,7 @@ export async function buildApp() {
   await app.register(createProfileRoutes, { prefix: '/api' });
   await app.register(smsRoutes, { prefix: '/api/sms' });
   await app.register(deviceRoutes, { prefix: '/api' });
+  await app.register(userDeviceRoutes, { prefix: '/api' });
   await app.register(voiceProfileRoutes, { prefix: '/api' });
   await app.register(healthNotesRoutes, { prefix: '/api' });
   await app.register(appointmentsRoutes, { prefix: '/api' });

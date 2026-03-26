@@ -12,6 +12,7 @@ import { ImpactNumbers }    from '@/components/sections/ImpactNumbers';
 import { Testimonials }     from '@/components/sections/Testimonials';
 import { ForOrganizations } from '@/components/sections/ForOrganizations';
 import { PricingSection }   from '@/components/sections/PricingSection';
+import { ClosingSection }   from '@/components/sections/ClosingSection';
 import { Footer }           from '@/components/sections/Footer';
 
 /* Heavy 3-D scenes — client-only */
@@ -55,6 +56,7 @@ export default function HomePage() {
         <Testimonials />
         <ForOrganizations />
         <PricingSection />
+        <ClosingSection />
       </div>
       <Footer />
     </>

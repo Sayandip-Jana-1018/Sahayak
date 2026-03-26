@@ -1,12 +1,20 @@
-// NotificationService — stub until Firebase is configured with google-services.json
-// To enable: run `flutterfire configure`, then uncomment firebase packages in pubspec.yaml
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
   Future<void> init() async {
-    // No-op until Firebase is configured
+    try {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (error) {
+      debugPrint('Notification permission request failed: $error');
+    }
   }
 
   Future<void> showNotification({
@@ -14,8 +22,15 @@ class NotificationService {
     required String body,
     String type = 'general',
   }) async {
-    // No-op until Firebase is configured
+    debugPrint('Notification [$type]: $title - $body');
   }
 
-  Future<String?> getFcmToken() async => null;
+  Future<String?> getFcmToken() async {
+    try {
+      return await FirebaseMessaging.instance.getToken();
+    } catch (error) {
+      debugPrint('FCM token fetch failed: $error');
+      return null;
+    }
+  }
 }

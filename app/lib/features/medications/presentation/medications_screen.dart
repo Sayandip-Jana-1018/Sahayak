@@ -9,7 +9,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/widgets/glass_card.dart';
-import '../../../shared\widgets/shimmer_loader.dart';
+import '../../../shared/widgets/shimmer_loader.dart';
 import '../bloc/medication_bloc.dart';
 import 'add_medication_sheet.dart';
 
@@ -312,10 +312,7 @@ class _AdherenceHero extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   '${state.streakDays}',
-                  style: SahayakTypography.statNumber(
-                    context,
-                    color: Colors.white,
-                  ),
+                  style: SahayakTypography.statNumber(32, Colors.white),
                 ),
               ),
             ],

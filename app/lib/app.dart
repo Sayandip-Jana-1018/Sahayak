@@ -14,6 +14,7 @@ import 'features/medications/bloc/medication_bloc.dart';
 import 'features/settings/bloc/settings_bloc.dart';
 import 'features/sos/bloc/sos_bloc.dart';
 import 'features/voice/bloc/voice_bloc.dart';
+import 'l10n/app_localizations.dart';
 
 class SahayakApp extends StatefulWidget {
   const SahayakApp({super.key});
@@ -104,6 +105,7 @@ class _SahayakAppState extends State<SahayakApp> with WidgetsBindingObserver {
                   Locale('en'),
                 ],
                 localizationsDelegates: const [
+                  AppLocalizations.delegate,
                   GlobalMaterialLocalizations.delegate,
                   GlobalWidgetsLocalizations.delegate,
                   GlobalCupertinoLocalizations.delegate,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/colors.dart';
 
@@ -49,8 +48,9 @@ class _SosFabState extends State<SosFab> with SingleTickerProviderStateMixin {
                 decoration: BoxDecoration(
                   shape:  BoxShape.circle,
                   border: Border.all(
-                    color: SahayakColors.sosRed.withOpacity(
-                        0.6 - _pulseCtrl.value * 0.5),
+                    color: SahayakColors.sosRed.withValues(
+                      alpha: 0.6 - (_pulseCtrl.value * 0.5),
+                    ),
                     width: 2,
                   ),
                 ),

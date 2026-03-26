@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/services/storage_service.dart';
+import '../../../core/services/upi_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../bloc/voice_bloc.dart';
+import 'widgets/payment_handoff_sheet.dart';
 
 class VoiceAssistantScreen extends StatefulWidget {
   const VoiceAssistantScreen({super.key});
@@ -94,7 +97,15 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
           ),
         ),
         child: SafeArea(
-          child: BlocBuilder<VoiceBloc, VoiceState>(
+          child: BlocConsumer<VoiceBloc, VoiceState>(
+            listenWhen: (previous, current) =>
+                previous.intent != current.intent || previous.status != current.status,
+            listener: (context, state) {
+              if (state.intent == 'emergency' &&
+                  (state.status == VoiceStatus.speaking || state.status == VoiceStatus.idle)) {
+                context.go('/sos-trigger');
+              }
+            },
             builder: (context, state) {
               return Column(
                 children: [
@@ -200,6 +211,13 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                           .fadeIn(duration: 320.ms)
                           .slideY(begin: 0.08, end: 0),
                     ),
+                  if (state.intent == 'payment')
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
+                      child: _PaymentIntentCard(
+                        transcribedText: state.transcribedText,
+                      ),
+                    ),
                   if (state.errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
@@ -247,7 +265,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                                 onChanged: (value) {
                                   setState(() => _companionMode = value);
                                 },
-                                activeColor: SahayakColors.voiceViolet,
+                                activeThumbColor: SahayakColors.voiceViolet,
                               ),
                             ],
                           ),
@@ -479,6 +497,7 @@ class _QuickVoiceActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = const [
+      ('Pay', 'Beti ko 500 bhejo'),
       ('Balance', 'Mera balance batao'),
       ('Medicine', 'Dawai ki yaad dilao'),
       ('Help', 'Mujhe madad chahiye'),
@@ -503,6 +522,91 @@ class _QuickVoiceActions extends StatelessWidget {
         },
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemCount: actions.length,
+      ),
+    );
+  }
+}
+
+class _PaymentIntentCard extends StatelessWidget {
+  const _PaymentIntentCard({required this.transcribedText});
+
+  final String? transcribedText;
+
+  @override
+  Widget build(BuildContext context) {
+    final amount = UpiService.instance.extractAmount(transcribedText);
+    final payee = UpiService.instance.extractSuggestedRecipient(transcribedText) ??
+        StorageService.instance.lastUpiName;
+
+    return AccentGlassCard(
+      accent: SahayakColors.saffron,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: SahayakColors.saffron.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: SahayakColors.saffron,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Payment handoff ready',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      amount != null
+                          ? 'Amount detected: Rs ${amount == amount.truncateToDouble() ? amount.toStringAsFixed(0) : amount.toStringAsFixed(2)}'
+                          : 'Amount was not detected clearly from the voice request',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            payee != null && payee.isNotEmpty
+                ? 'You can continue to a UPI app for a manual, safe payment to $payee.'
+                : 'You can continue to a UPI app for a manual, safe payment after confirming the beneficiary.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => PaymentHandoffSheet(
+                    transcribedText: transcribedText,
+                    initialAmount: amount,
+                    initialPayeeName: payee,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.open_in_new_rounded),
+              label: const Text('Open UPI app'),
+            ),
+          ),
+        ],
       ),
     );
   }

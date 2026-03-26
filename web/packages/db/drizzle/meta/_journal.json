@@ -8,6 +8,13 @@
       "when": 1774461942529,
       "tag": "0000_add-device-is-active",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774531500000,
+      "tag": "0001_add-user-devices",
+      "breakpoints": true
     }
   ]
 }

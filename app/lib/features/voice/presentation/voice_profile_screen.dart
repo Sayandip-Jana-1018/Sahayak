@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/services/audio_service.dart';
@@ -62,7 +61,6 @@ class _VoiceProfileScreenState extends State<VoiceProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = Theme.of(context).colorScheme.primary;
     final allRecorded = _samplePaths.every((p) => p != null);
 
@@ -146,7 +144,7 @@ class _SampleSlot extends StatelessWidget {
             width:  52, height: 52,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
             ),
             child: Icon(
               isRecording

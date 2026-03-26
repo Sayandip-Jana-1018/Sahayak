@@ -122,7 +122,7 @@ export const sosEvents = pgTable('sos_events', {
   id: uuid('id').primaryKey().defaultRandom(),
   elderlyProfileId: uuid('elderly_profile_id').notNull().references(() => elderlyProfiles.id, { onDelete: 'cascade' }),
   triggeredAt: timestamp('triggered_at', { withTimezone: true }).defaultNow(),
-  triggerType: text('trigger_type', { enum: ['voice', 'shake', 'inactivity', 'fall'] }),
+  triggerType: text('trigger_type', { enum: ['button', 'voice', 'shake', 'inactivity', 'fall'] }),
   severity: text('severity', { enum: ['low', 'medium', 'high', 'critical'] }).default('high'),
   locationLat: decimal('location_lat', { precision: 10, scale: 7 }),
   locationLng: decimal('location_lng', { precision: 10, scale: 7 }),
@@ -323,6 +323,24 @@ export const deviceRegistrations = pgTable('device_registrations', {
   uniqueIndex('device_reg_key_idx').on(t.deviceKey),
 ]);
 
+export const userDevices = pgTable('user_devices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  deviceInstallationId: text('device_installation_id').notNull(),
+  platform: text('platform').notNull(),
+  deviceModel: text('device_model'),
+  osVersion: text('os_version'),
+  appVersion: text('app_version'),
+  fcmToken: text('fcm_token'),
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).defaultNow(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().$onUpdate(() => new Date()),
+}, (t) => [
+  index('user_devices_user_idx').on(t.userId),
+  uniqueIndex('user_devices_installation_idx').on(t.deviceInstallationId),
+]);
+
 // ═══════════════════════════════════════════
 // VOICE PROFILE SAMPLES
 // ═══════════════════════════════════════════
@@ -369,6 +387,13 @@ export const deviceRegistrationsRelations = relations(deviceRegistrations, ({ on
   elderlyProfile: one(elderlyProfiles, {
     fields: [deviceRegistrations.elderlyProfileId],
     references: [elderlyProfiles.id],
+  }),
+}));
+
+export const userDevicesRelations = relations(userDevices, ({ one }) => ({
+  user: one(users, {
+    fields: [userDevices.userId],
+    references: [users.id],
   }),
 }));
 

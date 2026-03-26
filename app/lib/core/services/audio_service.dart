@@ -112,7 +112,11 @@ class AudioService {
     await _tts.stop();
     await _player.stop();
     if (_playbackPath != null) {
-      await File(_playbackPath!).delete().catchError((_) {});
+      try {
+        await File(_playbackPath!).delete();
+      } catch (_) {
+        // Best-effort cleanup for temporary playback files.
+      }
       _playbackPath = null;
     }
   }

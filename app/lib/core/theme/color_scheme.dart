@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'colors.dart';
-
 enum SahayakColorTheme { saffron, ocean, forest, rose, purple, ember }
 
 extension SahayakColorThemeX on SahayakColorTheme {

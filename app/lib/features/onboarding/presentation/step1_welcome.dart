@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../core/theme/colors.dart';
+import '../../../shared/widgets/glass_button.dart';
 import '../../../shared/widgets/glass_card.dart';
 
 class Step1Welcome extends StatelessWidget {
@@ -10,21 +12,21 @@ class Step1Welcome extends StatelessWidget {
     required this.onLanguageSelected,
   });
 
-  final String?        selectedLanguage;
+  final String? selectedLanguage;
   final void Function(String) onLanguageSelected;
 
   static const _languages = [
-    {'code': 'hi', 'name': 'हिंदी',    'flag': '🇮🇳', 'eng': 'Hindi'},
-    {'code': 'ta', 'name': 'தமிழ்',   'flag': '🇮🇳', 'eng': 'Tamil'},
-    {'code': 'bn', 'name': 'বাংলা',    'flag': '🇧🇩', 'eng': 'Bengali'},
-    {'code': 'mr', 'name': 'मराठी',   'flag': '🇮🇳', 'eng': 'Marathi'},
-    {'code': 'te', 'name': 'తెలుగు',  'flag': '🇮🇳', 'eng': 'Telugu'},
-    {'code': 'kn', 'name': 'ಕನ್ನಡ',   'flag': '🇮🇳', 'eng': 'Kannada'},
-    {'code': 'gu', 'name': 'ગુજરાતી', 'flag': '🇮🇳', 'eng': 'Gujarati'},
-    {'code': 'pa', 'name': 'ਪੰਜਾਬੀ',  'flag': '🇮🇳', 'eng': 'Punjabi'},
-    {'code': 'ml', 'name': 'മലയാളം',  'flag': '🇮🇳', 'eng': 'Malayalam'},
-    {'code': 'ur', 'name': 'اردو',     'flag': '🇵🇰', 'eng': 'Urdu'},
-    {'code': 'en', 'name': 'English',  'flag': '🇬🇧', 'eng': 'English'},
+    ('hi', 'Hindi', 'हिंदी'),
+    ('ta', 'Tamil', 'தமிழ்'),
+    ('bn', 'Bengali', 'বাংলা'),
+    ('mr', 'Marathi', 'मराठी'),
+    ('te', 'Telugu', 'తెలుగు'),
+    ('kn', 'Kannada', 'ಕನ್ನಡ'),
+    ('gu', 'Gujarati', 'ગુજરાતી'),
+    ('pa', 'Punjabi', 'ਪੰਜਾਬੀ'),
+    ('ml', 'Malayalam', 'മലയാളം'),
+    ('ur', 'Urdu', 'اردو'),
+    ('en', 'English', 'English'),
   ];
 
   @override
@@ -33,91 +35,200 @@ class Step1Welcome extends StatelessWidget {
     final accent = Theme.of(context).colorScheme.primary;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
-          Text('🙏', style: const TextStyle(fontSize: 64))
-              .animate()
-              .scale(duration: 600.ms, curve: Curves.elasticOut),
-          const SizedBox(height: 16),
+          GlassCard(
+            padding: const EdgeInsets.all(24),
+            accentColor: accent,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    gradient: SahayakColors.primaryGradient(
+                      accent,
+                      SahayakColors.ashokaGreen,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accent.withValues(alpha: 0.22),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'S',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ).animate().fadeIn(duration: 320.ms).scale(
+                      begin: const Offset(0.92, 0.92),
+                      curve: Curves.easeOutBack,
+                    ),
+                const SizedBox(height: 22),
+                Text(
+                  'Sahayak',
+                  style: Theme.of(context).textTheme.displaySmall,
+                ).animate().fadeIn(delay: 90.ms, duration: 300.ms),
+                const SizedBox(height: 10),
+                Text(
+                  'Your phone. Your language. Your freedom.',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ).animate().fadeIn(delay: 150.ms, duration: 320.ms),
+                const SizedBox(height: 10),
+                Text(
+                  'Choose the elder\'s most comfortable language first. The entire app experience will adapt from here.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: SahayakColors.textMuted(isDark),
+                      ),
+                ).animate().fadeIn(delay: 210.ms, duration: 340.ms),
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: const [
+                    _FeatureChip(label: 'Voice first'),
+                    _FeatureChip(label: 'Large text'),
+                    _FeatureChip(label: 'Offline ready'),
+                  ],
+                ).animate().fadeIn(delay: 260.ms, duration: 320.ms),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           Text(
-            'Sahayak में आपका स्वागत है',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+            'Select a starting language',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'This can be changed later from Settings.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: SahayakColors.textMuted(isDark),
                 ),
-          ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
-          const SizedBox(height: 8),
-          Text(
-            'अपनी भाषा चुनें / Choose your language',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
-          const SizedBox(height: 32),
-
-          // Language grid
+          ),
+          const SizedBox(height: 16),
           GridView.builder(
-            shrinkWrap:      true,
-            physics:         const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount:    3,
-              crossAxisSpacing:  12,
-              mainAxisSpacing:   12,
-              childAspectRatio:  1.1,
+              crossAxisCount: 2,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 1.45,
             ),
             itemCount: _languages.length,
-            itemBuilder: (context, i) {
-              final lang     = _languages[i];
-              final isActive = selectedLanguage == lang['code'];
+            itemBuilder: (context, index) {
+              final (code, english, native) = _languages[index];
+              final isActive = selectedLanguage == code;
+
               return GestureDetector(
-                onTap: () => onLanguageSelected(lang['code']!),
+                onTap: () => onLanguageSelected(code),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
                     color: isActive
-                        ? accent.withOpacity(0.15)
+                        ? accent.withValues(alpha: isDark ? 0.18 : 0.14)
                         : SahayakColors.glassFill(isDark),
+                    borderRadius: BorderRadius.circular(22),
                     border: Border.all(
                       color: isActive ? accent : SahayakColors.glassBorder(isDark),
-                      width: isActive ? 2 : 1,
+                      width: isActive ? 1.8 : 1,
                     ),
                     boxShadow: isActive
-                        ? [BoxShadow(
-                            color:       accent.withOpacity(0.25),
-                            blurRadius:  12,
-                            spreadRadius: 1,
-                          )]
+                        ? [
+                            BoxShadow(
+                              color: accent.withValues(alpha: 0.18),
+                              blurRadius: 22,
+                              offset: const Offset(0, 10),
+                            ),
+                          ]
                         : null,
                   ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(lang['flag']!,
-                          style: const TextStyle(fontSize: 22)),
-                      const SizedBox(height: 4),
-                      Text(
-                        lang['name']!,
-                        style: TextStyle(
-                          fontSize:   15,
-                          fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                          color:      isActive
-                              ? accent
-                              : SahayakColors.textPrimary(isDark),
-                          fontFamily: 'NotoSansDevanagari',
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 180),
+                          opacity: isActive ? 1 : 0,
+                          child: Icon(
+                            Icons.check_circle_rounded,
+                            color: accent,
+                            size: 20,
+                          ),
                         ),
+                      ),
+                      Text(
+                        native,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: isActive ? accent : null,
+                            ),
+                      ),
+                      Text(
+                        english,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: isActive
+                                  ? accent
+                                  : SahayakColors.textMuted(isDark),
+                            ),
                       ),
                     ],
                   ),
                 ),
-              ).animate()
-               .fadeIn(delay: (i * 40).ms, duration: 300.ms)
-               .scale(begin: const Offset(0.9, 0.9), delay: (i * 40).ms,
-                   duration: 300.ms, curve: Curves.easeOut);
+              ).animate().fadeIn(delay: (index * 40).ms, duration: 260.ms).slideY(
+                    begin: 0.12,
+                    end: 0,
+                    curve: Curves.easeOutCubic,
+                  );
             },
           ),
+          const SizedBox(height: 22),
+          GlassButton(
+            label: selectedLanguage == null ? 'Choose a language' : 'Continue',
+            onPressed: selectedLanguage == null
+                ? null
+                : () => onLanguageSelected(selectedLanguage!),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _FeatureChip extends StatelessWidget {
+  const _FeatureChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: SahayakColors.glassFill(isDark),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: SahayakColors.glassBorder(isDark)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge,
       ),
     );
   }

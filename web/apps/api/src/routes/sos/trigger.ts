@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { caregiverLinks, db, elderlyProfiles, eq, inArray, sosEvents, users } from '@sahayak/db';
-import { emitToCaregiver } from '../../plugins/socket';
+import { caregiverLinks, db, elderlyProfiles, eq, inArray, sosEvents, userDevices, users } from '@sahayak/db';
+import { emitToCaregiver, emitToUser } from '../../plugins/socket';
 import { buildSosSmsMessage, sendBulkSms } from '../../lib/sms';
 import { z } from 'zod';
 
@@ -10,7 +10,7 @@ const sosTriggerSchema = z.object({
     lat: z.number().min(-90).max(90),
     lng: z.number().min(-180).max(180),
   }).optional(),
-  triggerType: z.enum(['voice', 'shake', 'inactivity', 'fall']),
+  triggerType: z.enum(['button', 'voice', 'shake', 'inactivity', 'fall']),
   severity: z.enum(['low', 'medium', 'high', 'critical']).default('high'),
 });
 
@@ -97,6 +97,17 @@ export async function sosTriggerRoutes(app: FastifyInstance) {
           locationUrl: googleMapsUrl,
           triggeredAt: created.triggeredAt?.toISOString() ?? new Date().toISOString(),
         });
+
+        emitToUser(caregiverId, 'sos_triggered', {
+          sosEventId: created.id,
+          elderlyProfileId: userId,
+          elderName: profile.name,
+          triggerType,
+          severity,
+          location,
+          locationUrl: googleMapsUrl,
+          triggeredAt: created.triggeredAt?.toISOString() ?? new Date().toISOString(),
+        });
       }
 
       const smsMessage = buildSosSmsMessage({
@@ -114,11 +125,17 @@ export async function sosTriggerRoutes(app: FastifyInstance) {
       );
 
       const notifiedUserIds = caregiverUsers.map((user) => user.id);
+      const pushTargets = caregiverIds.length > 0
+        ? await db.select({ id: userDevices.id })
+            .from(userDevices)
+            .where(inArray(userDevices.userId, caregiverIds))
+        : [];
 
       await db.update(sosEvents)
         .set({
           notifiedUserIds,
           smsCount,
+          pushCount: pushTargets.length,
         })
         .where(eq(sosEvents.id, created.id));
 

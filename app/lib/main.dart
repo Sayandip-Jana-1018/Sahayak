@@ -1,35 +1,31 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:workmanager/workmanager.dart';
-import 'firebase_options.dart';
-import 'core/services/storage_service.dart';
-import 'core/services/auth_service.dart';
-import 'app.dart';
 
-// ── Background FCM handler — MUST be top-level function ─────────────────────
+import 'app.dart';
+import 'core/services/auth_service.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/storage_service.dart';
+import 'firebase_options.dart';
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  debugPrint('🔔 FCM background: ${message.data}');
-  // TODO: Show local notification via flutter_local_notifications
+  debugPrint('FCM background message: ${message.data}');
 }
 
-// ── WorkManager background callback — top-level ─────────────────────────────
 @pragma('vm:entry-point')
 void _workManagerCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     switch (task) {
       case 'sahayak.medicationCheck':
-        // Check Hive for pending reminders at current time
-        // Show local notification if due
-        debugPrint('⏰ WorkManager: checking medication reminders');
+        debugPrint('WorkManager: checking medication reminders');
         break;
       case 'sahayak.heartbeat':
-        // Send GPS + battery to backend
-        debugPrint('💓 WorkManager: sending heartbeat');
+        debugPrint('WorkManager: sending heartbeat');
         break;
     }
     return true;
@@ -39,40 +35,33 @@ void _workManagerCallbackDispatcher() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ── 1. Firebase — MUST be first async call ─────────────────────────────────
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  } catch (e) {
-    debugPrint('Firebase init failed: $e');
+  } catch (error) {
+    debugPrint('Firebase init failed: $error');
   }
 
-  // ── 2. Request notification permission (Android 13+) ──────────────────────
   try {
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-  } catch (_) {}
+    await NotificationService.instance.init();
+  } catch (error) {
+    debugPrint('NotificationService init failed: $error');
+  }
 
-  // ── 3. Storage (Hive) ─────────────────────────────────────────────────────
   try {
     await StorageService.instance.init();
-  } catch (e) {
-    debugPrint('StorageService init failed: $e');
+  } catch (error) {
+    debugPrint('StorageService init failed: $error');
   }
 
-  // ── 4. Auth — restore JWT from secure storage ─────────────────────────────
   try {
     await AuthService.instance.init();
-  } catch (e) {
-    debugPrint('AuthService init failed: $e');
+  } catch (error) {
+    debugPrint('AuthService init failed: $error');
   }
 
-  // ── 5. WorkManager — background medication checks ─────────────────────────
   try {
     await Workmanager().initialize(
       _workManagerCallbackDispatcher,
@@ -84,20 +73,15 @@ Future<void> main() async {
       frequency: const Duration(minutes: 15),
       constraints: Constraints(networkType: NetworkType.notRequired),
     );
-  } catch (e) {
-    debugPrint('WorkManager init failed: $e');
+  } catch (error) {
+    debugPrint('WorkManager init failed: $error');
   }
 
-  // ── 6. Portrait lock ──────────────────────────────────────────────────────
   try {
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-  } catch (_) {}
-
-  // ── 7. Transparent status bar ─────────────────────────────────────────────
-  try {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,

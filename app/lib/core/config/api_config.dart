@@ -38,6 +38,7 @@ class ApiConfig {
   // ── Device / Notifications ──────────────────────────────────────────────────
   static const String deviceRegister = '/api/device/register';
   static const String deviceStatus   = '/api/device/status';
+  static const String userDeviceRegister = '/api/user-devices/register';
 
   // ── Location ────────────────────────────────────────────────────────────
   static const String locationUpdate = '/api/device/location';

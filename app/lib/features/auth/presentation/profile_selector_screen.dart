@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/colors.dart';
-import '../../../shared/widgets/glass_card.dart';
-import '../../../core/services/auth_service.dart';
-import '../../../core/network/api_client.dart';
+
 import '../../../core/config/api_config.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/theme/colors.dart';
 import '../../../shared/models/models.dart';
+import '../../../shared/widgets/glass_button.dart';
+import '../../../shared/widgets/glass_card.dart';
 
 class ProfileSelectorScreen extends StatefulWidget {
   const ProfileSelectorScreen({super.key});
@@ -28,19 +30,22 @@ class _ProfileSelectorScreenState extends State<ProfileSelectorScreen> {
 
   Future<void> _fetchProfiles() async {
     try {
-      final res = await ApiClient.instance.get(ApiConfig.onboardingStatus);
-      final data = res.data as Map<String, dynamic>;
+      final response = await ApiClient.instance.get(ApiConfig.onboardingStatus);
+      final data = response.data as Map<String, dynamic>;
       final list = (data['profiles'] as List?) ?? [];
+
       if (mounted) {
         setState(() {
           _profiles = list
-              .map((e) => ElderlyProfile.fromJson(e as Map<String, dynamic>))
+              .map((item) => ElderlyProfile.fromJson(item as Map<String, dynamic>))
               .toList();
           _loading = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -52,88 +57,110 @@ class _ProfileSelectorScreenState extends State<ProfileSelectorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark  = Theme.of(context).brightness == Brightness.dark;
-    final accent  = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end:   Alignment.bottomCenter,
-                colors: isDark
-                    ? [SahayakColors.darkBg, SahayakColors.darkSurface]
-                    : [SahayakColors.lightBg, SahayakColors.lightElevated],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  Text('किसके लिए?',
-                      style: Theme.of(context).textTheme.displaySmall)
-                      .animate().fadeIn(duration: 400.ms)
-                      .slideX(begin: -0.2, end: 0, duration: 400.ms),
-                  const SizedBox(height: 4),
-                  Text('जिस बुजुर्ग की देखभाल करनी है उन्हें चुनें',
-                      style: Theme.of(context).textTheme.bodyMedium)
-                      .animate().fadeIn(delay: 100.ms, duration: 400.ms),
-                  const SizedBox(height: 32),
-
-                  if (_loading)
-                    const Expanded(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (_profiles.isEmpty)
-                    Expanded(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.person_add_alt_1_rounded,
-                                size: 64,
-                                color: SahayakColors.textMuted(isDark)),
-                            const SizedBox(height: 16),
-                            Text('कोई प्रोफाइल नहीं मिली',
-                                style: Theme.of(context).textTheme.titleMedium),
-                            const SizedBox(height: 8),
-                            FilledButton(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: SahayakColors.heroGlow(isDark, accent),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AccentGlassCard(
+                  accent: accent,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Choose an elder profile',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Select who you want to support right now. The dashboard, medicines, and SOS history will switch instantly.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GlassButton(
+                              label: 'Add new profile',
+                              icon: Icons.person_add_alt_1_rounded,
                               onPressed: () => context.go('/onboarding'),
-                              child: const Text('नई प्रोफाइल जोड़ें'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(duration: 320.ms).slideY(begin: 0.08, end: 0),
+                const SizedBox(height: 20),
+                if (_loading)
+                  const Expanded(
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_profiles.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(28),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.elderly_woman_rounded,
+                              size: 68,
+                              color: accent,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No elder profiles found yet',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Create the first profile to start medicines, voice support, and SOS protection.',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            GlassButton(
+                              label: 'Create first profile',
+                              onPressed: () => context.go('/onboarding'),
                             ),
                           ],
                         ),
                       ),
-                    )
-                  else
-                    Expanded(
-                      child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:     2,
-                          crossAxisSpacing:   16,
-                          mainAxisSpacing:    16,
-                          childAspectRatio:   0.82,
-                        ),
-                        itemCount: _profiles.length,
-                        itemBuilder: (context, i) =>
-                            _ProfileCard(
-                              profile:  _profiles[i],
-                              onSelect: () => _selectProfile(_profiles[i]),
-                              index:    i,
-                            ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.82,
+                      ),
+                      itemCount: _profiles.length,
+                      itemBuilder: (context, index) => _ProfileCard(
+                        profile: _profiles[index],
+                        onSelect: () => _selectProfile(_profiles[index]),
+                        index: index,
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -147,8 +174,8 @@ class _ProfileCard extends StatelessWidget {
   });
 
   final ElderlyProfile profile;
-  final VoidCallback   onSelect;
-  final int            index;
+  final VoidCallback onSelect;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
@@ -158,86 +185,117 @@ class _ProfileCard extends StatelessWidget {
 
     return GlassCard(
       padding: const EdgeInsets.all(18),
-      onTap:   onSelect,
+      onTap: onSelect,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar + active dot
-          Stack(
+          Row(
             children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: accent.withOpacity(0.15),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  gradient: SahayakColors.primaryGradient(
+                    accent,
+                    SahayakColors.ashokaGreen,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.18),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
                 child: Text(
                   profile.name.isNotEmpty ? profile.name[0].toUpperCase() : '?',
-                  style: TextStyle(
-                    fontSize:   28,
-                    fontWeight: FontWeight.w700,
-                    color:      accent,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              if (profile.isActive)
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width:  14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: SahayakColors.successGreen,
-                      border: Border.all(
-                        color: SahayakColors.bg(isDark),
-                        width: 2,
+              const Spacer(),
+              Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: profile.isActive
+                      ? SahayakColors.successGreen
+                      : SahayakColors.textMuted(isDark),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            profile.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 6),
+          if (profile.ageYears != null)
+            Text(
+              '${profile.ageYears} years',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          if (profile.city != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                profile.cityState,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          const Spacer(),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  profile.isActive ? 'Online' : 'Last synced earlier',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: profile.isActive
+                            ? SahayakColors.successGreen
+                            : SahayakColors.textMuted(isDark),
                       ),
+                ),
+              ),
+              if (battery != null)
+                Row(
+                  children: [
+                    Icon(
+                      battery > 60
+                          ? Icons.battery_full_rounded
+                          : battery > 20
+                              ? Icons.battery_3_bar_rounded
+                              : Icons.battery_alert_rounded,
+                      size: 18,
+                      color: battery > 20
+                          ? SahayakColors.successGreen
+                          : SahayakColors.sosRed,
                     ),
-                  ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$battery%',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
                 ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            profile.name,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (profile.ageYears != null)
-            Text('${profile.ageYears} वर्ष',
-                style: Theme.of(context).textTheme.bodySmall),
-          if (profile.city != null)
-            Text(profile.cityState,
-                style: Theme.of(context).textTheme.bodySmall,
-                maxLines: 1, overflow: TextOverflow.ellipsis),
-          const Spacer(),
-          // Battery
-          if (battery != null)
-            Row(
-              children: [
-                Icon(
-                  battery > 60
-                      ? Icons.battery_full_rounded
-                      : battery > 20
-                          ? Icons.battery_3_bar_rounded
-                          : Icons.battery_alert_rounded,
-                  size:  16,
-                  color: battery > 20
-                      ? SahayakColors.successGreen
-                      : SahayakColors.sosRed,
-                ),
-                const SizedBox(width: 4),
-                Text('$battery%',
-                    style: const TextStyle(fontSize: 12)),
-              ],
-            ),
         ],
       ),
-    ).animate().fadeIn(delay: (index * 80).ms, duration: 400.ms)
-     .slideY(begin: 0.2, end: 0, delay: (index * 80).ms, duration: 400.ms,
-         curve: Curves.easeOut);
+    ).animate().fadeIn(delay: (index * 80).ms, duration: 320.ms).slideY(
+          begin: 0.12,
+          end: 0,
+          curve: Curves.easeOutCubic,
+        );
   }
 }

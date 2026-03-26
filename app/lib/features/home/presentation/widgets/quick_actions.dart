@@ -20,6 +20,12 @@ class QuickActions extends StatelessWidget {
         '/sos-trigger',
       ),
       _Action(
+        'Pay',
+        Icons.account_balance_wallet_rounded,
+        SahayakColors.saffron,
+        '/voice',
+      ),
+      _Action(
         'Medicines',
         Icons.medication_rounded,
         SahayakColors.successGreen,
@@ -86,16 +92,16 @@ class _ActionButtonState extends State<_ActionButton> {
         HapticFeedback.mediumImpact();
         context.go(a.route);
       },
-      child: AnimatedScale(
+        child: AnimatedScale(
         scale:    _pressed ? 0.88 : 1.0,
         duration: const Duration(milliseconds: 100),
         child: SizedBox(
-          width: 78,
+          width: 68,
           child: Column(
             children: [
               Container(
-                width: 58,
-                height: 58,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -117,13 +123,13 @@ class _ActionButtonState extends State<_ActionButton> {
                     ),
                   ],
                 ),
-                  child: Icon(a.icon, color: a.color, size: 28),
+                  child: Icon(a.icon, color: a.color, size: 24),
               ),
               const SizedBox(height: 8),
               Text(
                 a.label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: isDark
                       ? Colors.white70

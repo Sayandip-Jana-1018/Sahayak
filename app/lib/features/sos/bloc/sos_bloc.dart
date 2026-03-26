@@ -1,11 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exceptions.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/services/storage_service.dart';
-import '../../../shared/models/models.dart';
 
 // Events
 abstract class SosEvent extends Equatable {
@@ -14,7 +12,7 @@ abstract class SosEvent extends Equatable {
 }
 class SosLoad    extends SosEvent { const SosLoad(); }
 class SosTrigger extends SosEvent {
-  const SosTrigger({this.triggerType = 'manual', this.lat, this.lng});
+  const SosTrigger({this.triggerType = 'button', this.lat, this.lng});
   final String triggerType;
   final double? lat;
   final double? lng;

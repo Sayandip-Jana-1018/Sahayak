@@ -6,7 +6,8 @@ import '../../../core/services/storage_service.dart';
 import '../../../core/theme/color_scheme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/theme_cubit.dart';
-import '../../../shared\widgets/glass_card.dart';
+import '../../../core/theme/typography.dart';
+import '../../../shared/widgets/glass_card.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../bloc/settings_bloc.dart';
 

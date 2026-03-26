@@ -69,9 +69,8 @@ class LocationService {
       await ApiClient.instance.patch(
         '${ApiConfig.deviceStatus}/$pid',
         data: {
-          'lastPingAt': DateTime.now().toIso8601String(),
-          'locationLat': pos.latitude,
-          'locationLng': pos.longitude,
+          'lastLocationLat': pos.latitude,
+          'lastLocationLng': pos.longitude,
         },
       );
       if (SocketService.instance.isConnected) {

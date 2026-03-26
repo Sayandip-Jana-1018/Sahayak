@@ -84,6 +84,36 @@ class StorageService {
     await _settings!.put('active_profile_id', id);
   }
 
+  String? get deviceInstallationId {
+    if (!_ready) return null;
+    return _settings!.get('device_installation_id') as String?;
+  }
+
+  Future<void> setDeviceInstallationId(String id) async {
+    if (!_ready) return;
+    await _settings!.put('device_installation_id', id);
+  }
+
+  String? get lastUpiId {
+    if (!_ready) return null;
+    return _settings!.get('last_upi_id') as String?;
+  }
+
+  Future<void> setLastUpiId(String id) async {
+    if (!_ready) return;
+    await _settings!.put('last_upi_id', id);
+  }
+
+  String? get lastUpiName {
+    if (!_ready) return null;
+    return _settings!.get('last_upi_name') as String?;
+  }
+
+  Future<void> setLastUpiName(String name) async {
+    if (!_ready) return;
+    await _settings!.put('last_upi_name', name);
+  }
+
   bool get hasActiveProfile => activeProfileId != null;
 
   // ── Profile Cache ─────────────────────────────────────────────────────────

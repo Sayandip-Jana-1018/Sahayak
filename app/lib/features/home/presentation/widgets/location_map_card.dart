@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../../core/theme/colors.dart';
 import '../../../../shared/models/models.dart';
 
 class LocationMapCard extends StatelessWidget {
   const LocationMapCard({super.key, required this.location});
+
   final DashboardLocation location;
 
   @override
@@ -16,7 +18,7 @@ class LocationMapCard extends StatelessWidget {
     if (!location.hasLocation) {
       return Center(
         child: Text(
-          'स्थान उपलब्ध नहीं',
+          'Location not available yet',
           style: TextStyle(color: SahayakColors.textMuted(isDark)),
         ),
       );
@@ -27,12 +29,18 @@ class LocationMapCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('अंतिम स्थान', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          'Last known location',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 8),
         if (location.address != null)
           Text(
             location.address!,
-            style: TextStyle(fontSize: 13, color: SahayakColors.textMuted(isDark)),
+            style: TextStyle(
+              fontSize: 13,
+              color: SahayakColors.textMuted(isDark),
+            ),
           ),
         const SizedBox(height: 10),
         ClipRRect(
@@ -40,7 +48,10 @@ class LocationMapCard extends StatelessWidget {
           child: SizedBox(
             height: 200,
             child: FlutterMap(
-              options: MapOptions(initialCenter: pos, initialZoom: 15.0),
+              options: MapOptions(
+                initialCenter: pos,
+                initialZoom: 15,
+              ),
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -49,10 +60,10 @@ class LocationMapCard extends StatelessWidget {
                 MarkerLayer(
                   markers: [
                     Marker(
-                      point:  pos,
-                      width:  60,
+                      point: pos,
+                      width: 60,
                       height: 60,
-                      child:  _PulsingLocationMarker(accent: accent),
+                      child: _PulsingLocationMarker(accent: accent),
                     ),
                   ],
                 ),
@@ -64,8 +75,11 @@ class LocationMapCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text(
-              'अपडेट: ${_formatTime(location.updatedAt!)}',
-              style: TextStyle(fontSize: 11, color: SahayakColors.textMuted(isDark)),
+              'Updated ${_formatTime(location.updatedAt!)}',
+              style: TextStyle(
+                fontSize: 11,
+                color: SahayakColors.textMuted(isDark),
+              ),
             ),
           ),
       ],
@@ -74,15 +88,16 @@ class LocationMapCard extends StatelessWidget {
 
   String _formatTime(DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1)  return 'अभी';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} मिनट पहले';
-    if (diff.inHours < 24)   return '${diff.inHours} घंटे पहले';
-    return '${diff.inDays} दिन पहले';
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hr ago';
+    return '${diff.inDays} day ago';
   }
 }
 
 class _PulsingLocationMarker extends StatefulWidget {
   const _PulsingLocationMarker({required this.accent});
+
   final Color accent;
 
   @override
@@ -91,22 +106,26 @@ class _PulsingLocationMarker extends StatefulWidget {
 
 class _PulsingLocationMarkerState extends State<_PulsingLocationMarker>
     with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double>   _anim;
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1400))
-      ..repeat(reverse: false);
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
     _anim = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
     );
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,23 +135,31 @@ class _PulsingLocationMarkerState extends State<_PulsingLocationMarker>
         alignment: Alignment.center,
         children: [
           Container(
-            width:  56 * _anim.value,
+            width: 56 * _anim.value,
             height: 56 * _anim.value,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: widget.accent.withAlpha((64 * (1 - _anim.value)).toInt()),
+              color: widget.accent.withValues(
+                alpha: 0.25 * (1 - _anim.value),
+              ),
             ),
           ),
           child!,
         ],
       ),
       child: Container(
-        width: 20, height: 20,
+        width: 20,
+        height: 20,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: widget.accent,
           border: Border.all(color: Colors.white, width: 2.5),
-          boxShadow: [BoxShadow(color: widget.accent.withAlpha(128), blurRadius: 8)],
+          boxShadow: [
+            BoxShadow(
+              color: widget.accent.withValues(alpha: 0.5),
+              blurRadius: 8,
+            ),
+          ],
         ),
       ),
     );

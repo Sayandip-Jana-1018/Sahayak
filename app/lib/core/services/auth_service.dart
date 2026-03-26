@@ -1,12 +1,16 @@
+import 'dart:io';
+import 'dart:math';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../network/api_client.dart';
-import '../network/api_exceptions.dart';
 import '../config/api_config.dart';
 import 'storage_service.dart';
 import '../network/socket_service.dart';
 import '../../shared/models/models.dart';
+import 'notification_service.dart';
 
 /// Auth service with JWT persistence via flutter_secure_storage.
 /// Dev mode: email/password sign-in via /api/auth/sign-in bridge.
@@ -24,6 +28,7 @@ class AuthService {
   UserModel? _currentUser;
   String? _jwtToken;
   bool _hasActiveProfile = false;
+  bool _listeningForTokenRefresh = false;
 
   UserModel? get currentUser => _currentUser;
   bool get isSignedIn => _jwtToken != null;
@@ -63,6 +68,7 @@ class AuthService {
         _hasActiveProfile = StorageService.instance.activeProfileId != null;
         // Reconnect socket with stored JWT
         SocketService.instance.connect(_jwtToken!);
+        await _registerCurrentUserDevice();
       }
     } catch (e) {
       debugPrint('AuthService.init error: $e');
@@ -89,8 +95,7 @@ class AuthService {
     ApiClient.instance.setToken(_jwtToken!);
     SocketService.instance.connect(_jwtToken!);
 
-    // Register FCM token for push notifications
-    _registerFcmToken();
+    await _registerCurrentUserDevice();
 
     return _currentUser!;
   }
@@ -106,7 +111,7 @@ class AuthService {
     _hasActiveProfile = StorageService.instance.activeProfileId != null;
 
     SocketService.instance.connect(jwtToken);
-    _registerFcmToken();
+    await _registerCurrentUserDevice();
     return _currentUser!;
   }
 
@@ -137,27 +142,41 @@ class AuthService {
     await _storage.delete(key: _userKey);
   }
 
-  /// Register FCM token with backend for push notifications.
-  Future<void> _registerFcmToken() async {
+  String _generateInstallationId() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(24, (_) => random.nextInt(256));
+    return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  /// Register caregiver mobile device for push notifications.
+  Future<void> _registerCurrentUserDevice() async {
     try {
-      final fcmToken = await FirebaseMessaging.instance.getToken();
-      if (fcmToken != null) {
-        final pid = StorageService.instance.activeProfileId;
-        if (pid != null) {
-          await ApiClient.instance.post('/api/device/register', data: {
-            'elderlyProfileId': pid,
-            'fcmToken': fcmToken,
-            'deviceModel': 'Android',
-            'appVersion': '1.0.0',
-          });
-        }
+      var installationId = StorageService.instance.deviceInstallationId;
+      if (installationId == null) {
+        installationId = _generateInstallationId();
+        await StorageService.instance.setDeviceInstallationId(installationId);
       }
-      // Listen for token refresh
-      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-        _registerFcmToken(); // Re-register with new token
+
+      final packageInfo = await PackageInfo.fromPlatform();
+      final fcmToken = await NotificationService.instance.getFcmToken();
+
+      await ApiClient.instance.post(ApiConfig.userDeviceRegister, data: {
+        'deviceInstallationId': installationId,
+        'platform': defaultTargetPlatform.name,
+        'deviceModel': defaultTargetPlatform == TargetPlatform.android ? 'Android' : 'Unknown',
+        'osVersion': Platform.operatingSystemVersion,
+        'appVersion': packageInfo.version,
+        'fcmToken': fcmToken,
       });
+
+      if (!_listeningForTokenRefresh) {
+        _listeningForTokenRefresh = true;
+        FirebaseMessaging.instance.onTokenRefresh.listen((_) {
+          _registerCurrentUserDevice();
+        });
+      }
     } catch (e) {
-      debugPrint('FCM token registration failed: $e');
+      debugPrint('User device registration failed: $e');
     }
   }
 }

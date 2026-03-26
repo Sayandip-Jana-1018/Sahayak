@@ -10,8 +10,8 @@ const OnboardingCompleteSchema = z.object({
   state: z.string().min(1),
   district: z.string().optional().default(''),
   primaryLanguage: z.enum(['hi', 'ta', 'bn', 'mr', 'te', 'kn', 'gu', 'pa', 'ml', 'ur', 'en']),
-  emergencyContactName: z.string().min(2),
-  emergencyContactPhone: z.string().regex(/^[6-9]\d{9}$/),
+  emergencyContactName: z.string().optional().default(''),
+  emergencyContactPhone: z.string().regex(/^[6-9]\d{9}$/).optional(),
   voiceProfileComplete: z.boolean().default(false),
   voiceSampleIds: z.array(z.string()).default([]),
   appInstalled: z.boolean().default(false),
@@ -93,6 +93,13 @@ export async function onboardingRoutes(app: FastifyInstance) {
         .limit(1);
 
       if (existing.length > 0) {
+        await db.update(users)
+          .set({
+            onboardingComplete: true,
+            role: data.userType === 'organization' ? 'ngo_admin' : 'family',
+          })
+          .where(eq(users.id, userId));
+
         // Profile exists, but still ensure Clerk metadata is set
         await updateClerkPublicMetadata();
         return reply.send({ elderlyProfileId: existing[0].id, dashboardUrl: '/dashboard' });

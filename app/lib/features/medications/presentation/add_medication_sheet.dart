@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/colors.dart';
-import '../../../shared\widgets/glass_button.dart';
-import '../../../shared\widgets/glass_card.dart';
+import '../../../shared/widgets/glass_button.dart';
+import '../../../shared/widgets/glass_card.dart';
 import '../bloc/medication_bloc.dart';
 
 class AddMedicationSheet extends StatefulWidget {

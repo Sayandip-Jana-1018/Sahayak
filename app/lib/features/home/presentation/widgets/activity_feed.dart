@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../../../../core/theme/colors.dart';
 import '../../../../shared/widgets/glass_card.dart';
 
 class ActivityFeed extends StatelessWidget {
   const ActivityFeed({super.key, required this.activities});
+
   final List<Map<String, dynamic>> activities;
 
   @override
@@ -13,7 +15,7 @@ class ActivityFeed extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Text(
-          'कोई गतिविधि नहीं',
+          'No recent activity yet',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       );
@@ -25,22 +27,21 @@ class ActivityFeed extends StatelessWidget {
           .toList()
           .asMap()
           .entries
-          .map((e) => _ActivityItem(item: e.value, index: e.key))
+          .map((entry) => _ActivityItem(item: entry.value))
           .toList(),
     );
   }
 }
 
 class _ActivityItem extends StatelessWidget {
-  const _ActivityItem({required this.item, required this.index});
+  const _ActivityItem({required this.item});
+
   final Map<String, dynamic> item;
-  final int index;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final type = item['type'] as String? ?? 'general';
-
     final (icon, accent, label) = _typeProps(type, item);
     final ts = item['timestamp'] as String?;
     final time = ts != null ? _formatTime(DateTime.tryParse(ts)) : '';
@@ -51,35 +52,35 @@ class _ActivityItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            // Icon
             Container(
-              width: 42, height: 42,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.15),
+                color: accent.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: accent, size: 20),
             ),
             const SizedBox(width: 14),
-            // Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: Theme.of(context).textTheme.titleSmall),
+                  Text(label, style: Theme.of(context).textTheme.titleSmall),
                   if (time.isNotEmpty)
-                    Text(time,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: SahayakColors.textMuted(isDark),
-                        )),
+                    Text(
+                      time,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: SahayakColors.textMuted(isDark),
+                      ),
+                    ),
                 ],
               ),
             ),
-            // Dot indicator
             Container(
-              width: 8, height: 8,
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: accent,
@@ -92,29 +93,54 @@ class _ActivityItem extends StatelessWidget {
   }
 
   (IconData, Color, String) _typeProps(
-      String type, Map<String, dynamic> item) {
+    String type,
+    Map<String, dynamic> item,
+  ) {
     return switch (type) {
-      'sos'       => (Icons.health_and_safety_rounded, SahayakColors.sosRed,
-                      'SOS अलर्ट भेजा गया'),
-      'med_taken' => (Icons.medication_rounded, SahayakColors.successGreen,
-                      '${item['medicineName'] ?? 'दवा'} ली गई'),
-      'med_missed'=> (Icons.medication_outlined, SahayakColors.medicineAmber,
-                      '${item['medicineName'] ?? 'दवा'} छूट गई'),
-      'voice'     => (Icons.mic_rounded, SahayakColors.voiceViolet,
-                      'आवाज़ से पूछा: ${item['commandText'] ?? ''}'),
-      'medication'=> (Icons.medication_rounded, SahayakColors.deviceBlue,
-                      'नई दवा जोड़ी गई'),
-      _           => (Icons.circle_notifications_rounded,
-                      SahayakColors.locationTeal, 'गतिविधि'),
+      'sos' => (
+          Icons.health_and_safety_rounded,
+          SahayakColors.sosRed,
+          'SOS alert was triggered',
+        ),
+      'med_taken' => (
+          Icons.medication_rounded,
+          SahayakColors.successGreen,
+          '${item['medicineName'] ?? 'Medicine'} was taken',
+        ),
+      'med_missed' => (
+          Icons.medication_outlined,
+          SahayakColors.medicineAmber,
+          '${item['medicineName'] ?? 'Medicine'} was missed',
+        ),
+      'voice' => (
+          Icons.mic_rounded,
+          SahayakColors.voiceViolet,
+          'Voice request: ${item['commandText'] ?? ''}',
+        ),
+      'medication' => (
+          Icons.medication_rounded,
+          SahayakColors.deviceBlue,
+          'A new medicine was added',
+        ),
+      'payment' => (
+          Icons.account_balance_wallet_rounded,
+          SahayakColors.saffron,
+          'Payment handoff was opened',
+        ),
+      _ => (
+          Icons.circle_notifications_rounded,
+          SahayakColors.locationTeal,
+          'Activity',
+        ),
     };
   }
 
   String _formatTime(DateTime? dt) {
     if (dt == null) return '';
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1)   return 'अभी';
-    if (diff.inMinutes < 60)  return '${diff.inMinutes} मिनट पहले';
-    if (diff.inHours   < 24)  return '${diff.inHours} घंटे पहले';
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hr ago';
     return DateFormat('d MMM').format(dt);
   }
 }

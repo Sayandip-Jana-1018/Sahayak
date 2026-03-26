@@ -313,7 +313,7 @@ class SosEvent {
   final String id;
   final String elderlyProfileId;
   final DateTime triggeredAt;
-  final String? triggerType; // voice | shake | inactivity | fall
+  final String? triggerType; // button | voice | shake | inactivity | fall
   final String severity;     // low | medium | high | critical
   final double? locationLat;
   final double? locationLng;

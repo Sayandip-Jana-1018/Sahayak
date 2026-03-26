@@ -38,7 +38,7 @@ class ColorThemePicker extends StatelessWidget {
                           color: SahayakColors.glassBorder(isDark), width: 1),
                   boxShadow: isActive
                       ? [BoxShadow(
-                          color:       theme.accent1.withOpacity(0.6),
+                          color:       theme.accent1.withValues(alpha: 0.6),
                           blurRadius:  12,
                           spreadRadius: 2,
                         )]

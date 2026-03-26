@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/theme/colors.dart';
+import '../../../shared/widgets/glass_button.dart';
 import '../../../shared/widgets/glass_card.dart';
 
 class Step2ElderDetails extends StatefulWidget {
@@ -6,7 +9,7 @@ class Step2ElderDetails extends StatefulWidget {
 
   final void Function(
     String name,
-    int?   age,
+    int? age,
     String? city,
     String? state,
     String? phone,
@@ -14,26 +17,34 @@ class Step2ElderDetails extends StatefulWidget {
   ) onNext;
 
   @override
-  State<Step2ElderDetails> createState() => _Step2State();
+  State<Step2ElderDetails> createState() => _Step2ElderDetailsState();
 }
 
-class _Step2State extends State<Step2ElderDetails> {
-  final _formKey    = GlobalKey<FormState>();
-  final _nameCtrl   = TextEditingController();
-  final _ageCtrl    = TextEditingController();
-  final _cityCtrl   = TextEditingController();
-  final _stateCtrl  = TextEditingController();
-  final _phoneCtrl  = TextEditingController();
-  String? _relationship = 'Son/Daughter';
+class _Step2ElderDetailsState extends State<Step2ElderDetails> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _ageCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
+  final _stateCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  String? _relationship = 'Son / Daughter';
 
   static const _relationships = [
-    'Son/Daughter', 'Spouse', 'Sibling', 'Grandchild', 'Caregiver', 'Other'
+    'Son / Daughter',
+    'Spouse',
+    'Sibling',
+    'Grandchild',
+    'Caregiver',
+    'Other',
   ];
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _ageCtrl.dispose(); _cityCtrl.dispose();
-    _stateCtrl.dispose(); _phoneCtrl.dispose();
+    _nameCtrl.dispose();
+    _ageCtrl.dispose();
+    _cityCtrl.dispose();
+    _stateCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
@@ -51,110 +62,195 @@ class _Step2State extends State<Step2ElderDetails> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('बुजुर्ग की जानकारी',
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 4),
-            Text('जिनकी देखभाल करनी है उनकी जानकारी दें',
-                style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 24),
-
-            // Row 1: Name + Age
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
+            Text(
+              'Tell us about the elder',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'We only ask for what is needed to personalize reminders, language, and safety support.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: SahayakColors.textMuted(isDark),
+                  ),
+            ),
+            const SizedBox(height: 20),
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _FieldLabel(label: 'Full name'),
+                  const SizedBox(height: 8),
+                  TextFormField(
                     controller: _nameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(hintText: 'पूरा नाम *'),
-                    validator: (v) =>
-                        (v?.trim().isEmpty ?? true) ? 'नाम आवश्यक है' : null,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _ageCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(hintText: 'आयु'),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return null;
-                      final age = int.tryParse(v);
-                      if (age == null || age < 40 || age > 120)
-                        return '40-120';
+                    decoration: const InputDecoration(hintText: 'Enter the elder\'s name'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Name is required';
+                      }
                       return null;
                     },
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Row 2: City + State
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _cityCtrl,
-                    decoration: const InputDecoration(hintText: 'शहर / City'),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _FieldLabel(label: 'Age'),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _ageCtrl,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(hintText: '65'),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return null;
+                                final age = int.tryParse(value);
+                                if (age == null || age < 40 || age > 120) {
+                                  return 'Use 40 to 120';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _FieldLabel(label: 'Relationship'),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<String>(
+                              initialValue: _relationship,
+                              decoration: const InputDecoration(
+                                hintText: 'Select relationship',
+                              ),
+                              items: _relationships
+                                  .map(
+                                    (value) => DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) => setState(() => _relationship = value),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _stateCtrl,
-                    decoration: const InputDecoration(hintText: 'राज्य / State'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Location and contact',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Phone
-            TextFormField(
-              controller:   _phoneCtrl,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText:   'मोबाइल नंबर (10 अंक)',
-                prefixIcon: Icon(Icons.phone_rounded, size: 22),
-                prefixText: '+91 ',
+                  const SizedBox(height: 6),
+                  Text(
+                    'This helps with local language support, SOS, and medicine coordination.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: SahayakColors.textMuted(isDark),
+                        ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _FieldLabel(label: 'City'),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _cityCtrl,
+                              decoration: const InputDecoration(hintText: 'Kolkata'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _FieldLabel(label: 'State'),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _stateCtrl,
+                              decoration: const InputDecoration(hintText: 'West Bengal'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  const _FieldLabel(label: 'Phone number'),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      hintText: '10-digit mobile number',
+                      prefixText: '+91 ',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return null;
+                      if (value.length != 10) return 'Enter 10 digits';
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              validator: (v) {
-                if (v == null || v.isEmpty) return null;
-                if (v.length != 10) return '10 अंक चाहिए';
-                return null;
-              },
             ),
-            const SizedBox(height: 16),
-
-            // Relationship dropdown
-            DropdownButtonFormField<String>(
-              value: _relationship,
-              decoration: const InputDecoration(
-                hintText:   'रिश्ता / Relationship',
-                prefixIcon: Icon(Icons.people_outline_rounded, size: 22),
-              ),
-              items: _relationships
-                  .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                  .toList(),
-              onChanged: (v) => setState(() => _relationship = v),
-            ),
-            const SizedBox(height: 32),
-
-            FilledButton(
+            const SizedBox(height: 20),
+            GlassButton(
+              label: 'Continue',
               onPressed: _submit,
-              child: const Text('आगे बढ़ें →'),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: SahayakColors.textMuted(isDark),
+          ),
     );
   }
 }
