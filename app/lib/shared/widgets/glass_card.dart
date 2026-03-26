@@ -15,6 +15,7 @@ class GlassCard extends StatelessWidget {
     this.onTap,
     this.width,
     this.height,
+    this.showTopHighlight = true,
   });
 
   final Widget child;
@@ -26,6 +27,7 @@ class GlassCard extends StatelessWidget {
   final VoidCallback? onTap;
   final double? width;
   final double? height;
+  final bool showTopHighlight;
 
   @override
   Widget build(BuildContext context) {
@@ -50,29 +52,30 @@ class GlassCard extends StatelessWidget {
                   : _lightDecoration(radius, accentAlpha),
               child: Stack(
                 children: [
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: IgnorePointer(
-                      child: Container(
-                        height: 1.2,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              (accentAlpha ?? SahayakColors.glassTopBorder(isDark))
-                                  .withValues(alpha: isDark ? 0.8 : 0.6),
-                              SahayakColors.glassTopBorder(isDark),
-                              (accentAlpha ?? SahayakColors.glassTopBorder(isDark))
-                                  .withValues(alpha: isDark ? 0.35 : 0.25),
-                            ],
+                  if (showTopHighlight)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        child: Container(
+                          height: 1.2,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                (accentAlpha ?? SahayakColors.glassTopBorder(isDark))
+                                    .withValues(alpha: isDark ? 0.8 : 0.6),
+                                SahayakColors.glassTopBorder(isDark),
+                                (accentAlpha ?? SahayakColors.glassTopBorder(isDark))
+                                    .withValues(alpha: isDark ? 0.35 : 0.25),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                   Positioned.fill(
                     child: IgnorePointer(
                       child: DecoratedBox(
