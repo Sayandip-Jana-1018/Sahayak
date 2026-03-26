@@ -47,40 +47,40 @@ class _StatCardState extends State<StatCard> {
         scale: _pressed ? 0.95 : 1.0,
         duration: const Duration(milliseconds: 120),
         child: Container(
-          width: 156,
+          width: 168,
           margin: EdgeInsets.only(
             left: widget.index == 0 ? 0 : 10,
             right: 2,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(26),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                      widget.accent.withValues(alpha: 0.18),
-                      widget.accent.withValues(alpha: 0.06),
+                      const Color(0x66111122),
+                      widget.accent.withValues(alpha: 0.10),
                     ]
                   : [
-                      widget.accent.withValues(alpha: 0.12),
-                      widget.accent.withValues(alpha: 0.04),
+                      Colors.white,
+                      widget.accent.withValues(alpha: 0.05),
                     ],
             ),
             border: Border.all(
-              color: widget.accent.withValues(alpha: isDark ? 0.3 : 0.2),
+              color: widget.accent.withValues(alpha: isDark ? 0.22 : 0.14),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.accent.withValues(alpha: 0.1),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -93,49 +93,67 @@ class _StatCardState extends State<StatCard> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        widget.accent.withValues(alpha: 0.25),
-                        widget.accent.withValues(alpha: 0.1),
+                        widget.accent.withValues(alpha: 0.18),
+                        widget.accent.withValues(alpha: 0.06),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: widget.accent.withValues(alpha: 0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        color: widget.accent.withValues(alpha: 0.12),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: Icon(widget.icon, color: widget.accent, size: 22),
                 ),
                 const Spacer(),
+                Container(
+                  width: 28,
+                  height: 3,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(
+                      colors: [
+                        widget.accent,
+                        widget.accent.withValues(alpha: 0.25),
+                      ],
+                    ),
+                  ),
+                ),
                 // Value
                 Text(
                   widget.value,
-                  style: SahayakTypography.statNumber(30, widget.accent),
+                  style: SahayakTypography.statNumber(
+                    28,
+                    isDark ? widget.accent : SahayakColors.textPrimary(isDark),
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 // Title
                 Text(
                   widget.title,
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                     color: SahayakColors.textPrimary(isDark),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (widget.subtitle != null) ...[
-                  const SizedBox(height: 1),
+                  const SizedBox(height: 3),
                   Text(
                     widget.subtitle!,
                     style: TextStyle(
                       fontSize: 11,
+                      height: 1.35,
                       fontWeight: FontWeight.w500,
                       color: SahayakColors.textMuted(isDark),
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

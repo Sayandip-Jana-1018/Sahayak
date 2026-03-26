@@ -50,6 +50,29 @@ class GlassCard extends StatelessWidget {
                   : _lightDecoration(radius, accentAlpha),
               child: Stack(
                 children: [
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: IgnorePointer(
+                      child: Container(
+                        height: 1.2,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              (accentAlpha ?? SahayakColors.glassTopBorder(isDark))
+                                  .withValues(alpha: isDark ? 0.8 : 0.6),
+                              SahayakColors.glassTopBorder(isDark),
+                              (accentAlpha ?? SahayakColors.glassTopBorder(isDark))
+                                  .withValues(alpha: isDark ? 0.35 : 0.25),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   Positioned.fill(
                     child: IgnorePointer(
                       child: DecoratedBox(
@@ -86,14 +109,9 @@ class GlassCard extends StatelessWidget {
   BoxDecoration _darkDecoration(double radius, Color? accent) => BoxDecoration(
         color: const Color(0x730F0F1E),
         borderRadius: BorderRadius.circular(radius),
-        border: Border(
-          top: BorderSide(
-            color: accent ?? SahayakColors.glassTopBorder(true),
-            width: 1,
-          ),
-          left: BorderSide(color: SahayakColors.glassBorder(true), width: 1),
-          right: BorderSide(color: SahayakColors.glassBorder(true), width: 1),
-          bottom: BorderSide(color: SahayakColors.glassBorder(true), width: 1),
+        border: Border.all(
+          color: accent?.withValues(alpha: 0.18) ?? SahayakColors.glassBorder(true),
+          width: 1,
         ),
         boxShadow: const [
           BoxShadow(
@@ -113,14 +131,9 @@ class GlassCard extends StatelessWidget {
   BoxDecoration _lightDecoration(double radius, Color? accent) => BoxDecoration(
         color: const Color(0xBFFFFFFF),
         borderRadius: BorderRadius.circular(radius),
-        border: Border(
-          top: BorderSide(
-            color: accent ?? SahayakColors.glassTopBorder(false),
-            width: 1,
-          ),
-          left: BorderSide(color: SahayakColors.glassBorder(false), width: 1),
-          right: BorderSide(color: SahayakColors.glassBorder(false), width: 1),
-          bottom: BorderSide(color: SahayakColors.glassBorder(false), width: 1),
+        border: Border.all(
+          color: accent?.withValues(alpha: 0.14) ?? SahayakColors.glassBorder(false),
+          width: 1,
         ),
         boxShadow: const [
           BoxShadow(

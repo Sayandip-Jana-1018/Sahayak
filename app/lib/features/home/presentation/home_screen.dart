@@ -10,6 +10,7 @@ import '../../../core/services/storage_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/widgets/immersive_shell.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../bloc/dashboard_bloc.dart';
 import 'widgets/activity_feed.dart';
@@ -53,34 +54,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return OfflineBanner(
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         body: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: SahayakColors.heroGlow(
-              isDark,
-              Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          child: RefreshIndicator(
-            onRefresh: () async {
-              context.read<DashboardBloc>().add(const DashboardRefresh());
-              await Future<void>.delayed(const Duration(milliseconds: 900));
-            },
-            child: BlocBuilder<DashboardBloc, DashboardState>(
-              builder: (context, state) {
-                if (state is DashboardInitial || state is DashboardLoading) {
-                  return _ShimmerHome(isDark: isDark);
-                }
-
-                if (state is DashboardError && state is! DashboardCached) {
-                  return _ErrorState(message: state.message);
-                }
-
-                if (state is DashboardLoaded) {
-                  return _DashboardBody(data: state.data);
-                }
-
-                return const SizedBox.shrink();
+          decoration: const BoxDecoration(),
+          child: ImmersiveShell(
+            primaryGlow: Theme.of(context).colorScheme.primary,
+            secondaryGlow: Theme.of(context).colorScheme.secondary,
+            child: RefreshIndicator(
+              onRefresh: () async {
+                context.read<DashboardBloc>().add(const DashboardRefresh());
+                await Future<void>.delayed(const Duration(milliseconds: 900));
               },
+              child: BlocBuilder<DashboardBloc, DashboardState>(
+                builder: (context, state) {
+                  if (state is DashboardInitial || state is DashboardLoading) {
+                    return _ShimmerHome(isDark: isDark);
+                  }
+
+                  if (state is DashboardError && state is! DashboardCached) {
+                    return _ErrorState(message: state.message);
+                  }
+
+                  if (state is DashboardLoaded) {
+                    return _DashboardBody(data: state.data);
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
           ),
         ),
@@ -110,6 +111,8 @@ class _DashboardBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _TopBar(profile: data.profile),
+                const SizedBox(height: 20),
+                _HeaderIntro(data: data),
                 const SizedBox(height: 18),
                 _HeroStatusCard(data: data)
                     .animate()
@@ -270,9 +273,11 @@ class _TopBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Namaste',
+                'Sahayak OS',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: SahayakColors.textMuted(isDark),
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
                     ),
               ),
               const SizedBox(height: 2),
@@ -293,6 +298,41 @@ class _TopBar extends StatelessWidget {
           icon: Icons.settings_rounded,
           accent: Theme.of(context).colorScheme.primary,
           onTap: () => context.go('/settings'),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderIntro extends StatelessWidget {
+  const _HeaderIntro({required this.data});
+
+  final DashboardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tone = data.stats.medicationsToday.pending == 0 &&
+            data.stats.sosEventsThisWeek == 0
+        ? 'A calm, clear view of today.'
+        : 'Today needs a little attention.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tone,
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                height: 1.02,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Voice, medicines, location, and emergency readiness are all visible in one place.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: SahayakColors.textMuted(isDark),
+                height: 1.55,
+              ),
         ),
       ],
     );

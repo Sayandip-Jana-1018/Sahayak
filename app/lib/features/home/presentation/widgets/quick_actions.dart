@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/colors.dart';
+import '../../../../shared/widgets/glass_card.dart';
 
 class QuickActions extends StatelessWidget {
   const QuickActions({super.key});
@@ -12,58 +13,72 @@ class QuickActions extends StatelessWidget {
     final accent = Theme.of(context).colorScheme.primary;
 
     final actions = [
-      _Action('Voice', Icons.mic_rounded, accent, '/voice'),
+      _Action('Talk', 'Speak naturally', Icons.mic_rounded, accent, '/voice'),
       _Action(
         'SOS',
+        'Emergency help',
         Icons.health_and_safety_rounded,
         SahayakColors.sosRed,
         '/sos-trigger',
       ),
       _Action(
         'Pay',
+        'Open UPI safely',
         Icons.account_balance_wallet_rounded,
         SahayakColors.saffron,
         '/voice',
       ),
       _Action(
         'Medicines',
+        'Today and history',
         Icons.medication_rounded,
         SahayakColors.successGreen,
         '/medications',
       ),
       _Action(
         'Health',
+        'Notes and visits',
         Icons.favorite_rounded,
         SahayakColors.locationTeal,
         '/health',
       ),
     ];
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: isDark ? const Color(0x66111122) : const Color(0xCCFFFFFF),
-        border: Border.all(color: SahayakColors.glassBorder(isDark)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.16 : 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+    return GlassCard(
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      borderRadius: 28,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              'Quick actions',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: SahayakColors.textPrimary(isDark),
+                  ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 112,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: actions.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, index) => _ActionButton(action: actions[index]),
+            ),
           ),
         ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: actions.map((a) => _ActionButton(action: a)).toList(),
       ),
     );
   }
 }
 
 class _Action {
-  const _Action(this.label, this.icon, this.color, this.route);
+  const _Action(this.label, this.subtitle, this.icon, this.color, this.route);
   final String   label;
+  final String   subtitle;
   final IconData icon;
   final Color    color;
   final String   route;
@@ -92,50 +107,66 @@ class _ActionButtonState extends State<_ActionButton> {
         HapticFeedback.mediumImpact();
         context.go(a.route);
       },
-        child: AnimatedScale(
+      child: AnimatedScale(
         scale:    _pressed ? 0.88 : 1.0,
         duration: const Duration(milliseconds: 100),
-        child: SizedBox(
-          width: 68,
+        child: Container(
+          width: 136,
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                a.color.withValues(alpha: isDark ? 0.16 : 0.12),
+                a.color.withValues(alpha: isDark ? 0.05 : 0.04),
+              ],
+            ),
+            border: Border.all(
+              color: a.color.withValues(alpha: isDark ? 0.24 : 0.18),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: a.color.withValues(alpha: 0.10),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      a.color.withValues(alpha: 0.2),
-                      a.color.withValues(alpha: 0.08),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: a.color.withValues(alpha: 0.25),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: a.color.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  color: a.color.withValues(alpha: isDark ? 0.12 : 0.10),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                  child: Icon(a.icon, color: a.color, size: 24),
+                alignment: Alignment.center,
+                child: Icon(a.icon, color: a.color, size: 24),
               ),
-              const SizedBox(height: 8),
+              const Spacer(),
               Text(
                 a.label,
                 style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? Colors.white70
-                      : Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: SahayakColors.textPrimary(isDark),
                 ),
-                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                a.subtitle,
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.35,
+                  fontWeight: FontWeight.w500,
+                  color: SahayakColors.textMuted(isDark),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

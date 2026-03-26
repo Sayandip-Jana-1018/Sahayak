@@ -57,11 +57,9 @@ class _GlassButtonState extends State<GlassButton> {
               decoration: BoxDecoration(
                 gradient:     grad,
                 borderRadius: BorderRadius.circular(16),
-                border: Border(
-                  top:    BorderSide(color: Colors.white.withValues(alpha: 0.25), width: 1),
-                  left:   BorderSide(color: Colors.white.withValues(alpha: 0.15), width: 1),
-                  right:  BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1),
-                  bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.16),
+                  width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -71,30 +69,59 @@ class _GlassButtonState extends State<GlassButton> {
                   ),
                 ],
               ),
-              child: Center(
-                child: widget.loading
-                    ? const SizedBox(
-                        width: 24, height: 24,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2.5, color: Colors.white))
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (widget.icon != null) ...[
-                            Icon(widget.icon, color: Colors.white, size: 22),
-                            const SizedBox(width: 8),
-                          ],
-                          Text(
-                            widget.label,
-                            style: const TextStyle(
-                              color:       Colors.white,
-                              fontSize:    16,
-                              fontWeight:  FontWeight.w700,
-                              letterSpacing: 0.3,
-                            ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: IgnorePointer(
+                      child: Container(
+                        height: 1.1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.32),
+                              Colors.white.withValues(alpha: 0.12),
+                              Colors.white.withValues(alpha: 0.06),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
+                    ),
+                  ),
+                  Center(
+                    child: widget.loading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.icon != null) ...[
+                                Icon(widget.icon, color: Colors.white, size: 22),
+                                const SizedBox(width: 8),
+                              ],
+                              Text(
+                                widget.label,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ],
               ),
             ),
           ),
