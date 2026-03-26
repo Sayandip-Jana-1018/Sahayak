@@ -1,55 +1,18 @@
 import type { FastifyInstance } from 'fastify';
-import { db, users, elderlyProfiles, caregiverLinks, medicationReminders, medicationLogs, sosEvents, voiceCommandLogs, eq, and, gte, desc, count, sql } from '@sahayak/db';
+import { and, count, db, desc, eq, gte, medicationLogs, elderlyProfiles, sosEvents, sql, voiceCommandLogs } from '@sahayak/db';
+import { getFirstLinkedProfileId, requireCaregiverAccess, requireDbUser } from '../../lib/auth';
 
 export async function dashboardOverviewRoutes(app: FastifyInstance) {
-  app.get('/overview', async (request, reply) => {
+  app.get('/overview', { preHandler: (app as any).authenticate }, async (request, reply) => {
     try {
-      const clerkId = (request as any).user?.sub || (request as any).user?.userId;
+      const dbUser = await requireDbUser(request, reply);
+      if (!dbUser) return;
 
-      // Find user's caregiver link → elderly profile
-      let userId: string | undefined;
-      let elderlyProfileId: string | undefined;
-
-      if (clerkId) {
-        const [dbUser] = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
-        if (dbUser) {
-          userId = dbUser.id;
-
-          // Priority 1: Cookie-based profile selection (set by profile selector page)
-          const cookieHeader = request.headers.cookie || '';
-          const selectedMatch = cookieHeader.match(/sahayak_selected_profile=([^;]+)/);
-          const selectedProfileId = selectedMatch?.[1];
-
-          if (selectedProfileId) {
-            // Verify user has access to this profile
-            const [validLink] = await db.select().from(caregiverLinks)
-              .where(and(
-                eq(caregiverLinks.caregiverId, dbUser.id),
-                eq(caregiverLinks.elderlyProfileId, selectedProfileId),
-              ))
-              .limit(1);
-            if (validLink) {
-              elderlyProfileId = selectedProfileId;
-            }
-          }
-
-          // Priority 2: Fall back to first link
-          if (!elderlyProfileId) {
-            const [link] = await db.select().from(caregiverLinks)
-              .where(eq(caregiverLinks.caregiverId, dbUser.id))
-              .limit(1);
-            if (link) {
-              elderlyProfileId = link.elderlyProfileId;
-            }
-          }
-        }
-      }
-
-      // Also accept query param for testing
-      if (!elderlyProfileId) {
-        const queryProfileId = (request.query as Record<string, string>)?.elderlyProfileId;
-        if (queryProfileId) elderlyProfileId = queryProfileId;
-      }
+      const queryProfileId = (request.query as Record<string, string>)?.elderlyProfileId;
+      const cookieHeader = request.headers.cookie || '';
+      const selectedMatch = cookieHeader.match(/sahayak_selected_profile=([^;]+)/);
+      const selectedProfileId = selectedMatch?.[1];
+      const elderlyProfileId = queryProfileId || selectedProfileId || await getFirstLinkedProfileId(dbUser.id) || undefined;
 
       if (!elderlyProfileId) {
         return reply.send({
@@ -60,28 +23,32 @@ export async function dashboardOverviewRoutes(app: FastifyInstance) {
         });
       }
 
-      // Get elderly profile
+      const access = await requireCaregiverAccess(request, reply, elderlyProfileId);
+      if (!access) return;
+
       const [profile] = await db.select().from(elderlyProfiles)
-        .where(eq(elderlyProfiles.id, elderlyProfileId))
+        .where(eq(elderlyProfiles.id, access.link.elderlyProfileId))
         .limit(1);
 
       if (!profile) {
-        return reply.status(404).send({ statusCode: 404, error: 'Not Found', message: 'Elderly profile not found' });
+        return reply.status(404).send({
+          statusCode: 404,
+          error: 'Not Found',
+          message: 'Elderly profile not found',
+        });
       }
 
-      // Today's start
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-      // Medication stats today
       const medLogs = await db.select({
         status: medicationLogs.status,
         cnt: count(),
       })
         .from(medicationLogs)
         .where(and(
-          eq(medicationLogs.elderlyProfileId, elderlyProfileId),
+          eq(medicationLogs.elderlyProfileId, access.link.elderlyProfileId),
           gte(medicationLogs.scheduledAt, todayStart),
         ))
         .groupBy(medicationLogs.status);
@@ -95,23 +62,20 @@ export async function dashboardOverviewRoutes(app: FastifyInstance) {
         if (row.status === 'missed') medStats.missed = c;
       }
 
-      // SOS events this week
       const [sosCount] = await db.select({ cnt: count() })
         .from(sosEvents)
         .where(and(
-          eq(sosEvents.elderlyProfileId, elderlyProfileId),
+          eq(sosEvents.elderlyProfileId, access.link.elderlyProfileId),
           gte(sosEvents.triggeredAt, weekAgo),
         ));
 
-      // Voice commands today
       const [usageCount] = await db.select({ cnt: count() })
         .from(voiceCommandLogs)
         .where(and(
-          eq(voiceCommandLogs.elderlyProfileId, elderlyProfileId),
+          eq(voiceCommandLogs.elderlyProfileId, access.link.elderlyProfileId),
           gte(voiceCommandLogs.timestamp, todayStart),
         ));
 
-      // Recent activity (last 20)
       const recentVoice = await db.select({
         id: voiceCommandLogs.id,
         type: sql<string>`'voice'`,
@@ -121,7 +85,7 @@ export async function dashboardOverviewRoutes(app: FastifyInstance) {
         timestamp: voiceCommandLogs.timestamp,
       })
         .from(voiceCommandLogs)
-        .where(eq(voiceCommandLogs.elderlyProfileId, elderlyProfileId))
+        .where(eq(voiceCommandLogs.elderlyProfileId, access.link.elderlyProfileId))
         .orderBy(desc(voiceCommandLogs.timestamp))
         .limit(10);
 
@@ -133,7 +97,7 @@ export async function dashboardOverviewRoutes(app: FastifyInstance) {
         timestamp: medicationLogs.scheduledAt,
       })
         .from(medicationLogs)
-        .where(eq(medicationLogs.elderlyProfileId, elderlyProfileId))
+        .where(eq(medicationLogs.elderlyProfileId, access.link.elderlyProfileId))
         .orderBy(desc(medicationLogs.scheduledAt))
         .limit(10);
 
@@ -147,15 +111,14 @@ export async function dashboardOverviewRoutes(app: FastifyInstance) {
         timestamp: sosEvents.triggeredAt,
       })
         .from(sosEvents)
-        .where(eq(sosEvents.elderlyProfileId, elderlyProfileId))
+        .where(eq(sosEvents.elderlyProfileId, access.link.elderlyProfileId))
         .orderBy(desc(sosEvents.triggeredAt))
         .limit(10);
 
-      // Merge and sort
       const recentActivity = [
-        ...recentVoice.map((v) => ({ ...v, type: 'voice' as const })),
-        ...recentMeds.map((m) => ({ ...m, type: m.status === 'taken' ? 'med_taken' as const : 'med_missed' as const })),
-        ...recentSos.map((s) => ({ ...s, type: 'sos' as const })),
+        ...recentVoice.map((voice) => ({ ...voice, type: 'voice' as const })),
+        ...recentMeds.map((med) => ({ ...med, type: med.status === 'taken' ? 'med_taken' as const : 'med_missed' as const })),
+        ...recentSos.map((sos) => ({ ...sos, type: 'sos' as const })),
       ].sort((a, b) => {
         const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
         const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
@@ -184,13 +147,12 @@ export async function dashboardOverviewRoutes(app: FastifyInstance) {
         location: {
           lat: profile.lastLocationLat ? parseFloat(profile.lastLocationLat) : null,
           lng: profile.lastLocationLng ? parseFloat(profile.lastLocationLng) : null,
-          address: null, // Reverse geocoding would go here
+          address: null,
           updatedAt: profile.lastLocationAt?.toISOString() || null,
         },
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch dashboard';
-      app.log.error({ error }, 'Dashboard overview error');
+      request.log.error({ error }, 'Dashboard overview error');
       return reply.status(500).send({
         statusCode: 500,
         error: 'Internal Server Error',

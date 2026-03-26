@@ -1,56 +1,44 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { db, users, appointments, caregiverLinks, eq } from '@sahayak/db';
-import { asc } from 'drizzle-orm';
+import { appointments, asc, db, eq } from '@sahayak/db';
+import { getFirstLinkedProfileId, requireCaregiverAccess, requireDbUser } from '../../lib/auth';
 
 export async function appointmentsRoutes(app: FastifyInstance) {
-  // GET /api/appointments
-  app.get('/appointments', async (request, reply) => {
-    try {
-      const clerkId = (request as any).user?.sub ?? (request as any).user?.userId;
-      let elderlyProfileId: string | undefined;
+  const auth = (app as any).authenticate;
 
-      if (clerkId) {
-        const [dbUser] = await db.select({ id: users.id }).from(users).where(eq(users.clerkId, clerkId)).limit(1);
-        if (dbUser) {
-          const [link] = await db.select({ elderlyProfileId: caregiverLinks.elderlyProfileId })
-            .from(caregiverLinks).where(eq(caregiverLinks.caregiverId, dbUser.id)).limit(1);
-          elderlyProfileId = link?.elderlyProfileId;
-        }
-      }
+  app.get('/appointments', { preHandler: auth }, async (request, reply) => {
+    try {
+      const dbUser = await requireDbUser(request, reply);
+      if (!dbUser) return;
 
       const query = request.query as { elderlyProfileId?: string };
-      if (query.elderlyProfileId) elderlyProfileId = query.elderlyProfileId;
-
-      if (!elderlyProfileId) return reply.send({ appointments: [] });
+      const elderlyProfileId = query.elderlyProfileId ?? await getFirstLinkedProfileId(dbUser.id);
+      const access = await requireCaregiverAccess(request, reply, elderlyProfileId);
+      if (!access) return;
 
       const appts = await db.select()
         .from(appointments)
-        .where(eq(appointments.elderlyProfileId, elderlyProfileId))
+        .where(eq(appointments.elderlyProfileId, access.link.elderlyProfileId))
         .orderBy(asc(appointments.scheduledAt))
         .limit(100);
 
       return reply.send({
-        appointments: appts.map((a) => ({
-          ...a,
-          scheduledAt: a.scheduledAt?.toISOString() ?? null,
-          createdAt: a.createdAt?.toISOString() ?? null,
+        appointments: appts.map((appt) => ({
+          ...appt,
+          scheduledAt: appt.scheduledAt?.toISOString() ?? null,
+          createdAt: appt.createdAt?.toISOString() ?? null,
         })),
       });
     } catch (err) {
-      app.log.error({ err }, 'Appointments GET error');
+      request.log.error({ err }, 'Appointments GET error');
       return reply.status(500).send({ statusCode: 500, error: 'Internal Server Error', message: 'Failed to fetch appointments' });
     }
   });
 
-  // POST /api/appointments
-  app.post('/appointments', async (request, reply) => {
+  app.post('/appointments', { preHandler: auth }, async (request, reply) => {
     try {
-      const clerkId = (request as any).user?.sub ?? (request as any).user?.userId;
-      if (!clerkId) return reply.status(401).send({ statusCode: 401, error: 'Unauthorized' });
-
-      const [dbUser] = await db.select({ id: users.id }).from(users).where(eq(users.clerkId, clerkId)).limit(1);
-      if (!dbUser) return reply.status(401).send({ statusCode: 401, error: 'Unauthorized', message: 'User not found' });
+      const dbUser = await requireDbUser(request, reply);
+      if (!dbUser) return;
 
       const body = z.object({
         elderlyProfileId: z.string().uuid(),
@@ -61,12 +49,8 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         notes: z.string().max(1000).optional(),
       }).parse(request.body);
 
-      // Verify caregiver access
-      const [link] = await db.select({ id: caregiverLinks.id })
-        .from(caregiverLinks)
-        .where(eq(caregiverLinks.caregiverId, dbUser.id))
-        .limit(1);
-      if (!link) return reply.status(403).send({ statusCode: 403, error: 'Forbidden', message: 'Access denied' });
+      const access = await requireCaregiverAccess(request, reply, body.elderlyProfileId);
+      if (!access) return;
 
       const [appt] = await db.insert(appointments).values({
         elderlyProfileId: body.elderlyProfileId,
@@ -84,8 +68,10 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         createdAt: appt.createdAt?.toISOString() ?? null,
       });
     } catch (err) {
-      if (err instanceof z.ZodError) return reply.status(400).send({ statusCode: 400, error: 'Validation Error', message: err.issues[0]?.message });
-      app.log.error({ err }, 'Appointment POST error');
+      if (err instanceof z.ZodError) {
+        return reply.status(400).send({ statusCode: 400, error: 'Validation Error', message: err.issues[0]?.message });
+      }
+      request.log.error({ err }, 'Appointment POST error');
       return reply.status(500).send({ statusCode: 500, error: 'Internal Server Error', message: 'Failed to create appointment' });
     }
   });

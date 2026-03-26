@@ -15,7 +15,7 @@ interface SOSJobData {
   }>;
 }
 
-const connection = process.env.REDIS_URL
+const connection: any = process.env.REDIS_URL
   ? new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null })
   : null;
 

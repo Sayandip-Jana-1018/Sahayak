@@ -41,6 +41,7 @@ import { adminSosEventsRoutes } from './routes/admin/sos-events';
 import { adminAiUsageRoutes } from './routes/admin/ai-usage';
 import { adminSystemHealthRoutes } from './routes/admin/system-health';
 import { adminAnnouncementsRoutes } from './routes/admin/announcements';
+import { signInRoutes } from './routes/auth/sign-in';
 
 export async function buildApp() {
   const app = Fastify({
@@ -56,10 +57,12 @@ export async function buildApp() {
 
   // ── Plugins ──
   await app.register(cors, {
-    origin: [
-      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      /\.sahayak\.in$/,
-    ],
+    origin: process.env.NODE_ENV !== 'production'
+      ? true // Dev: allow all origins (Flutter emulator, physical device, web)
+      : [
+          process.env.NEXT_PUBLIC_APP_URL || 'https://sahayak.in',
+          /\.sahayak\.in$/,
+        ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
@@ -99,6 +102,9 @@ export async function buildApp() {
   });
 
   // ── Routes ──
+  // ── Auth (DEV_ONLY bridge for Flutter) ──
+  await app.register(signInRoutes, { prefix: '/api/auth' });
+
   await app.register(healthRoutes, { prefix: '/api' });
   await app.register(voiceDemoRoutes, { prefix: '/api/ai' });
   await app.register(prescriptionOcrRoutes, { prefix: '/api/ai' });

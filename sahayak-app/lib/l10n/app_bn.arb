@@ -1,0 +1,14 @@
+{
+  "@@locale": "bn",
+  "appTitle": "Sahayak",
+  "navHome": "হোম",
+  "navMeds": "ওষুধ",
+  "navVoice": "ভয়েস",
+  "navHealth": "স্বাস্থ্য",
+  "navSos": "SOS",
+  "settingsTitle": "সেটিংস",
+  "loginTitle": "সাইন ইন",
+  "medicationsTitle": "ওষুধ",
+  "healthTitle": "স্বাস্থ্য",
+  "sosTitle": "SOS ইতিহাস"
+}

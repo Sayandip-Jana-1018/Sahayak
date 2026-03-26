@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { db, users, elderlyProfiles, voiceProfileSamples, caregiverLinks, eq } from '@sahayak/db';
+import { db, voiceProfileSamples, eq } from '@sahayak/db';
 import { createClient } from '@supabase/supabase-js';
+import { getFirstLinkedProfileId, requireCaregiverAccess, requireDbUser } from '../../lib/auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder-key';
@@ -21,27 +22,24 @@ function estimateQuality(fileSizeBytes: number): number {
 }
 
 export async function voiceProfileRoutes(app: FastifyInstance) {
-  app.post('/voice-profile/upload-sample', async (request, reply) => {
+  app.post('/voice-profile/upload-sample', { preHandler: (app as any).authenticate }, async (request, reply) => {
     try {
-      const clerkId = (request as any).user?.sub ?? (request as any).user?.userId;
-      if (!clerkId) return reply.status(401).send({ statusCode: 401, error: 'Unauthorized' });
-
-      const [dbUser] = await db.select({ id: users.id }).from(users).where(eq(users.clerkId, clerkId)).limit(1);
-      if (!dbUser) return reply.status(401).send({ statusCode: 401, error: 'Unauthorized', message: 'User not found' });
-
-      // Get caregiver's elderly profile
-      const [link] = await db.select({ elderlyProfileId: caregiverLinks.elderlyProfileId })
-        .from(caregiverLinks).where(eq(caregiverLinks.caregiverId, dbUser.id)).limit(1);
-      if (!link) return reply.status(400).send({ statusCode: 400, error: 'Bad Request', message: 'No elderly profile linked. Complete onboarding first.' });
+      const dbUser = await requireDbUser(request, reply);
+      if (!dbUser) return;
 
       const data = await request.file();
       if (!data) return reply.status(400).send({ statusCode: 400, error: 'Bad Request', message: 'No file provided' });
 
       const sampleIndexStr = data.fields?.sampleIndex as { value?: string } | undefined;
+      const elderlyProfileIdField = (data.fields?.elderlyProfileId as { value?: string } | undefined)?.value;
       const sampleIndex = parseInt(sampleIndexStr?.value ?? '0', 10);
       if (isNaN(sampleIndex) || sampleIndex < 0 || sampleIndex > 2) {
         return reply.status(400).send({ statusCode: 400, error: 'Bad Request', message: 'sampleIndex must be 0, 1, or 2' });
       }
+
+      const elderlyProfileId = elderlyProfileIdField ?? await getFirstLinkedProfileId(dbUser.id);
+      const access = await requireCaregiverAccess(request, reply, elderlyProfileId);
+      if (!access) return;
 
       const buffer = await data.toBuffer();
       const quality = estimateQuality(buffer.length);
@@ -67,7 +65,7 @@ export async function voiceProfileRoutes(app: FastifyInstance) {
       // Upsert into voice_profile_samples
       const existing = await db.select({ id: voiceProfileSamples.id })
         .from(voiceProfileSamples)
-        .where(eq(voiceProfileSamples.elderlyProfileId, link.elderlyProfileId))
+        .where(eq(voiceProfileSamples.elderlyProfileId, access.link.elderlyProfileId))
         .limit(10);
 
       const existingSample = existing.find((_, i) => i === sampleIndex);
@@ -81,7 +79,7 @@ export async function voiceProfileRoutes(app: FastifyInstance) {
         sampleId = updated.id;
       } else {
         const [created] = await db.insert(voiceProfileSamples).values({
-          elderlyProfileId: link.elderlyProfileId,
+          elderlyProfileId: access.link.elderlyProfileId,
           sampleIndex,
           storageUrl,
           quality: String(quality),

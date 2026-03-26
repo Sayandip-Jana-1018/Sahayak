@@ -1,0 +1,84 @@
+name: sahayak_app
+description: Sahayak — Elder-first AI companion app
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # ── State Management ─────────────────────────────────────────────────────
+  flutter_bloc: ^8.1.6
+  bloc: ^8.1.4
+  equatable: ^2.0.5
+
+  # ── Navigation ───────────────────────────────────────────────────────────
+  go_router: ^14.2.7
+
+  # ── Networking ───────────────────────────────────────────────────────────
+  dio: ^5.4.3+1
+  socket_io_client: ^2.0.3+1
+  connectivity_plus: ^6.0.3
+
+  # ── Storage ──────────────────────────────────────────────────────────────
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.3
+
+  # ── Auth ─────────────────────────────────────────────────────────────────
+  flutter_secure_storage: ^9.2.2
+  flutter_web_auth_2: ^4.0.0       # Production Clerk WebView (Phase 7)
+  local_auth: ^2.3.0               # Biometric unlock (Phase 7)
+
+  # ── Audio ─────────────────────────────────────────────────────────────────
+  flutter_tts: ^4.2.0
+  just_audio: ^0.9.38
+  audio_session: ^0.1.21
+  record: ^6.0.0
+
+  # ── Location / Sensors ────────────────────────────────────────────────────
+  geolocator: ^13.0.1
+  sensors_plus: ^7.0.0
+
+  # ── Maps ─────────────────────────────────────────────────────────────────
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # ── Firebase ─────────────────────────────────────────────────────────────
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.4
+
+  # ── Animations & UI ──────────────────────────────────────────────────────
+  flutter_animate: ^4.5.0
+  shimmer: ^3.0.0
+  lottie: ^3.1.2
+  fl_chart: ^0.69.0
+  cached_network_image: ^3.4.0
+  flutter_svg: ^2.0.9
+
+  # ── Background Tasks ─────────────────────────────────────────────────────
+  workmanager: ^0.9.0
+
+  # ── Utilities ────────────────────────────────────────────────────────────
+  intl: ^0.20.2
+  url_launcher: ^6.3.1
+  image_picker: ^1.1.2
+  permission_handler: ^11.3.1
+  package_info_plus: ^8.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/lottie/

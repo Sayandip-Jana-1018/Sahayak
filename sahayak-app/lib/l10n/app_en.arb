@@ -1,0 +1,14 @@
+{
+  "@@locale": "en",
+  "appTitle": "Sahayak",
+  "navHome": "Home",
+  "navMeds": "Medicines",
+  "navVoice": "Voice",
+  "navHealth": "Health",
+  "navSos": "SOS",
+  "settingsTitle": "Settings",
+  "loginTitle": "Sign in",
+  "medicationsTitle": "Medicines",
+  "healthTitle": "Health",
+  "sosTitle": "SOS history"
+}
