@@ -90,72 +90,107 @@ class _LoginScreenState extends State<LoginScreen> {
                               .slideY(begin: -0.05, end: 0),
                           const SizedBox(height: 26),
                           GlassCard(
-                            padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+                            padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+                            borderRadius: 30,
                             child: Form(
                               key: _formKey,
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _SectionPill(
-                                    label: 'Family access',
-                                    accent: accent,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Stay close to your elder without the usual app clutter.',
-                                    style: theme.textTheme.headlineSmall,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Monitor SOS updates, medicine routines, and daily support from one calm place.',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: SahayakColors.textMuted(isDark),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  const _FieldLabel(label: 'Email'),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _emailCtrl,
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    decoration: const InputDecoration(
-                                      hintText: 'name@example.com',
-                                      prefixIcon: Icon(Icons.alternate_email_rounded),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Please enter your email';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 18),
-                                  const _FieldLabel(label: 'Password'),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _passCtrl,
-                                    obscureText: _obscure,
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) => _signIn(),
-                                    decoration: InputDecoration(
-                                      hintText: 'At least 6 characters',
-                                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                                      suffixIcon: IconButton(
-                                        onPressed: () => setState(() => _obscure = !_obscure),
-                                        icon: Icon(
-                                          _obscure
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
+                                  Column(
+                                    children: [
+                                      _SectionPill(
+                                        label: 'Family access',
+                                        accent: accent,
+                                      ),
+                                      const SizedBox(height: 18),
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(maxWidth: 280),
+                                        child: Text(
+                                          'Stay close to your elder with one calm control center.',
+                                          textAlign: TextAlign.center,
+                                          style: theme.textTheme.headlineSmall?.copyWith(
+                                            height: 1.16,
+                                          ),
                                         ),
                                       ),
+                                      const SizedBox(height: 10),
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(maxWidth: 310),
+                                        child: Text(
+                                          'Monitor SOS updates, medicine routines, and daily support without a cluttered dashboard.',
+                                          textAlign: TextAlign.center,
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            color: SahayakColors.textMuted(isDark),
+                                            height: 1.45,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Container(
+                                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.03)
+                                          : Colors.black.withValues(alpha: 0.025),
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: isDark
+                                            ? Colors.white.withValues(alpha: 0.06)
+                                            : Colors.black.withValues(alpha: 0.05),
+                                      ),
                                     ),
-                                    validator: (value) {
-                                      if (value == null || value.length < 6) {
-                                        return 'Password must be at least 6 characters';
-                                      }
-                                      return null;
-                                    },
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const _FieldLabel(label: 'Email'),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          controller: _emailCtrl,
+                                          keyboardType: TextInputType.emailAddress,
+                                          textInputAction: TextInputAction.next,
+                                          decoration: const InputDecoration(
+                                            hintText: 'name@example.com',
+                                            prefixIcon: Icon(Icons.alternate_email_rounded),
+                                          ),
+                                          validator: (value) {
+                                            if (value == null || value.trim().isEmpty) {
+                                              return 'Please enter your email';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        const SizedBox(height: 18),
+                                        const _FieldLabel(label: 'Password'),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          controller: _passCtrl,
+                                          obscureText: _obscure,
+                                          textInputAction: TextInputAction.done,
+                                          onFieldSubmitted: (_) => _signIn(),
+                                          decoration: InputDecoration(
+                                            hintText: 'At least 6 characters',
+                                            prefixIcon: const Icon(Icons.lock_outline_rounded),
+                                            suffixIcon: IconButton(
+                                              onPressed: () => setState(() => _obscure = !_obscure),
+                                              icon: Icon(
+                                                _obscure
+                                                    ? Icons.visibility_outlined
+                                                    : Icons.visibility_off_outlined,
+                                              ),
+                                            ),
+                                          ),
+                                          validator: (value) {
+                                            if (value == null || value.length < 6) {
+                                              return 'Password must be at least 6 characters';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   if (_error != null) ...[
                                     const SizedBox(height: 16),
@@ -190,21 +225,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: _loading ? null : _signIn,
                                   ),
                                   const SizedBox(height: 18),
-                                  Text(
-                                    'What you can monitor',
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: SahayakColors.textMuted(isDark),
+                                  Center(
+                                    child: Text(
+                                      'What you can monitor',
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        color: SahayakColors.textMuted(isDark),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 10),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: const [
-                                      _MiniTag(label: 'SOS alerts'),
-                                      _MiniTag(label: 'Medicine timeline'),
-                                      _MiniTag(label: 'Voice support'),
-                                    ],
+                                  Center(
+                                    child: Wrap(
+                                      alignment: WrapAlignment.center,
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: const [
+                                        _MiniTag(label: 'SOS alerts'),
+                                        _MiniTag(label: 'Medicine timeline'),
+                                        _MiniTag(label: 'Voice support'),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -280,7 +320,7 @@ class _BrandBlock extends StatelessWidget {
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 color: accent,
-                letterSpacing: 3.2,
+                letterSpacing: 2.8,
               ),
         ),
         const SizedBox(height: 8),
@@ -289,6 +329,14 @@ class _BrandBlock extends StatelessWidget {
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: SahayakColors.textSecondary(isDark),
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Apno ke liye bharosemand digital sahayak',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: SahayakColors.textMuted(isDark),
               ),
         ),
       ],
