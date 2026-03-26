@@ -1,55 +1,9 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+# Legacy duplicate Flutter folder left outside the repo structure.
+# This can stay ignored until Windows releases the file lock and we delete it.
+sahayak-app/
 
-# Build outputs
-dist/
-.next/
-out/
-build/
-
-# Turbo
-.turbo/
-
-# Environment
-.env
-.env.local
-.env.*.local
-.env.production
-.env.staging
-
-# IDE
-.vscode/
+# Root-only local/IDE/temp files
 .idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Debug
-npm-debug.log*
-pnpm-debug.log*
-yarn-error.log*
-
-# Test coverage
-coverage/
-
-# Docker
-docker-compose.override.yml
-
-# Generated
-*.tsbuildinfo
-next-env.d.ts
-
-# Sentry
-.sentryclirc
-
-# PWA
-public/sw.js
-public/workbox-*.js
-public/sw.js.map
-public/workbox-*.js.map
+.dart-appdata/
+.dart-localappdata/
+.corepack/
