@@ -1,14 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import {
-  Syne,
-  DM_Sans,
-  Open_Sans,
-  Caveat,
-  Instrument_Serif,
-  Sora,
-  Noto_Sans,
-  Playfair_Display,
-} from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from 'next-themes';
 import { LenisProvider } from '@/providers/lenis-provider';
@@ -20,64 +10,6 @@ import { CustomCursor } from '@/components/ui/CustomCursor';
 import { BackgroundOrbs } from '@/components/ui/BackgroundOrbs';
 import { Navbar } from '@/components/layout/Navbar';
 import './globals.css';
-
-const openSans = Open_Sans({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-  weight: ["700", "800"],
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
-  display: "swap",
-  weight: ["300", "400", "500"],
-});
-
-const syne = Syne({
-  subsets: ["latin"],
-  variable: "--font-accent",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  variable: "--font-instrument",
-  display: "swap",
-  weight: ["400"],
-  style: ["normal", "italic"],
-});
-
-const sora = Sora({
-  subsets: ["latin"],
-  variable: "--font-sora",
-  display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const notoSansDevanagari = Noto_Sans({
-  subsets: ["latin", "devanagari"],
-  variable: "--font-devanagari",
-  display: "swap",
-  weight: ["400", "500", "600"],
-});
-
-const playfairDisplay = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
-});
-
-const caveat = Caveat({
-  subsets: ['latin'],
-  variable: '--font-caveat',
-  display: 'swap',
-  weight: ['400', '500', '600', '700'],
-});
 
 export const metadata: Metadata = {
   title: "Sahayak — India's Voice-First AI for Elderly Smartphones",
@@ -128,7 +60,6 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${openSans.variable} ${dmSans.variable} ${syne.variable} ${caveat.variable} ${instrumentSerif.variable} ${sora.variable} ${notoSansDevanagari.variable} ${playfairDisplay.variable}`}
           style={{
             fontFamily: "var(--font-playfair), serif",
             minHeight: "100vh",
