@@ -7,3 +7,4 @@ sahayak-app/
 .dart-appdata/
 .dart-localappdata/
 .corepack/
+app/android/.kotlin/
