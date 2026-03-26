@@ -83,193 +83,179 @@ class _LoginScreenState extends State<LoginScreen> {
               final compact = constraints.maxHeight < 760;
 
               return SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(20, compact ? 10 : 18, 20, 24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight - (compact ? 34 : 46),
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 430),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _BrandBlock(
-                            accent: accent,
-                            compact: compact,
-                          )
-                              .animate()
-                              .fadeIn(duration: 450.ms)
-                              .slideY(begin: -0.05, end: 0),
-                          SizedBox(height: compact ? 18 : 26),
-                          GlassCard(
-                            padding: EdgeInsets.fromLTRB(
-                              compact ? 20 : 24,
-                              compact ? 22 : 28,
-                              compact ? 20 : 24,
-                              compact ? 20 : 24,
+                padding: EdgeInsets.fromLTRB(20, compact ? 8 : 14, 20, 20),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _BrandBlock(
+                          accent: accent,
+                          compact: compact,
+                        )
+                            .animate()
+                            .fadeIn(duration: 450.ms)
+                            .slideY(begin: -0.05, end: 0),
+                        SizedBox(height: compact ? 14 : 20),
+                        Container(
+                          padding: EdgeInsets.fromLTRB(
+                            compact ? 18 : 22,
+                            compact ? 20 : 24,
+                            compact ? 18 : 22,
+                            compact ? 18 : 22,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0x54151529)
+                                : Colors.white.withValues(alpha: 0.82),
+                            borderRadius: BorderRadius.circular(34),
+                            border: Border.all(
+                              color: isDark
+                                  ? SahayakColors.saffron.withValues(alpha: 0.16)
+                                  : Colors.black.withValues(alpha: 0.05),
                             ),
-                            borderRadius: 34,
-                            blur: 26,
-                            showTopHighlight: false,
-                            accentColor: SahayakColors.saffron,
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Column(
-                                    children: [
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(maxWidth: 290),
-                                        child: Text(
-                                          'A calm command center for the people you care about.',
-                                          textAlign: TextAlign.center,
-                                          style: theme.textTheme.headlineSmall?.copyWith(
-                                            height: 1.12,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: compact ? 28 : null,
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(height: compact ? 8 : 12),
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(maxWidth: 304),
-                                        child: Text(
-                                          'Track SOS updates, medicines, and daily support in one soft, uncluttered view.',
-                                          textAlign: TextAlign.center,
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            color: SahayakColors.textMuted(isDark),
-                                            height: 1.5,
-                                            fontSize: compact ? 15 : null,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: compact ? 18 : 22),
-                                  const _FieldLabel(label: 'Email'),
-                                  const SizedBox(height: 8),
-                                  _SoftInputShell(
-                                    child: TextFormField(
-                                      controller: _emailCtrl,
-                                      keyboardType: TextInputType.emailAddress,
-                                      textInputAction: TextInputAction.next,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
+                                blurRadius: 26,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 290),
+                                  child: Center(
+                                    child: Text(
+                                      'A calm command center for the people you care about.',
                                       textAlign: TextAlign.center,
-                                      decoration: const InputDecoration(
-                                        hintText: 'name@example.com',
+                                      style: theme.textTheme.headlineSmall?.copyWith(
+                                        height: 1.12,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: compact ? 26 : null,
                                       ),
-                                      validator: (value) {
-                                        if (value == null || value.trim().isEmpty) {
-                                          return 'Please enter your email';
-                                        }
-                                        return null;
-                                      },
                                     ),
                                   ),
-                                  SizedBox(height: compact ? 14 : 18),
-                                  const _FieldLabel(label: 'Password'),
-                                  const SizedBox(height: 8),
-                                  _SoftInputShell(
-                                    child: TextFormField(
-                                      controller: _passCtrl,
-                                      obscureText: _obscure,
-                                      textInputAction: TextInputAction.done,
-                                      onFieldSubmitted: (_) => _signIn(),
+                                ),
+                                SizedBox(height: compact ? 8 : 12),
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 304),
+                                  child: Center(
+                                    child: Text(
+                                      'Track SOS updates, medicines, and daily support in one soft, uncluttered view.',
                                       textAlign: TextAlign.center,
-                                      decoration: InputDecoration(
-                                        hintText: 'At least 6 characters',
-                                        suffixIcon: IconButton(
-                                          onPressed: () => setState(() => _obscure = !_obscure),
-                                          icon: Icon(
-                                            _obscure
-                                                ? Icons.visibility_outlined
-                                                : Icons.visibility_off_outlined,
-                                          ),
-                                        ),
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: SahayakColors.textMuted(isDark),
+                                        height: 1.5,
+                                        fontSize: compact ? 15 : null,
                                       ),
-                                      validator: (value) {
-                                        if (value == null || value.length < 6) {
-                                          return 'Password must be at least 6 characters';
-                                        }
-                                        return null;
-                                      },
                                     ),
                                   ),
-                                  if (_error != null) ...[
-                                    SizedBox(height: compact ? 12 : 16),
-                                    AccentGlassCard(
-                                      accent: SahayakColors.sosRed,
-                                      padding: const EdgeInsets.all(14),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Icon(
-                                            Icons.error_outline_rounded,
-                                            color: SahayakColors.sosRed,
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              _error!,
-                                              style: theme.textTheme.bodyMedium?.copyWith(
-                                                color: SahayakColors.sosRed,
-                                              ),
+                                ),
+                                SizedBox(height: compact ? 18 : 22),
+                                const _FieldLabel(label: 'Email'),
+                                const SizedBox(height: 8),
+                                _SoftInputShell(
+                                  child: TextFormField(
+                                    controller: _emailCtrl,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    textAlign: TextAlign.center,
+                                    decoration: const InputDecoration(
+                                      hintText: 'name@example.com',
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty) {
+                                        return 'Please enter your email';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                SizedBox(height: compact ? 14 : 18),
+                                const _FieldLabel(label: 'Password'),
+                                const SizedBox(height: 8),
+                                _SoftInputShell(
+                                  child: TextFormField(
+                                    controller: _passCtrl,
+                                    obscureText: _obscure,
+                                    textInputAction: TextInputAction.done,
+                                    onFieldSubmitted: (_) => _signIn(),
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
+                                      hintText: 'At least 6 characters',
+                                      suffixIcon: IconButton(
+                                        onPressed: () => setState(() => _obscure = !_obscure),
+                                        icon: Icon(
+                                          _obscure
+                                              ? Icons.visibility_outlined
+                                              : Icons.visibility_off_outlined,
+                                        ),
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.length < 6) {
+                                        return 'Password must be at least 6 characters';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                if (_error != null) ...[
+                                  SizedBox(height: compact ? 12 : 16),
+                                  AccentGlassCard(
+                                    accent: SahayakColors.sosRed,
+                                    padding: const EdgeInsets.all(14),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Icon(
+                                          Icons.error_outline_rounded,
+                                          color: SahayakColors.sosRed,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            _error!,
+                                            style: theme.textTheme.bodyMedium?.copyWith(
+                                              color: SahayakColors.sosRed,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  SizedBox(height: compact ? 18 : 22),
-                                  GlassButton(
-                                    label: 'Continue securely',
-                                    icon: Icons.arrow_forward_rounded,
-                                    gradient: ctaGradient,
-                                    loading: _loading,
-                                    onPressed: _loading ? null : _signIn,
-                                  ),
-                                  SizedBox(height: compact ? 14 : 20),
-                                  Center(
-                                    child: Text(
-                                      'What you can monitor',
-                                      style: theme.textTheme.labelMedium?.copyWith(
-                                        color: SahayakColors.textMuted(isDark),
-                                        letterSpacing: 0.2,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: compact ? 10 : 12),
-                                  Center(
-                                    child: Wrap(
-                                      alignment: WrapAlignment.center,
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: const [
-                                        _MiniTag(label: 'SOS alerts'),
-                                        _MiniTag(label: 'Medicine timeline'),
-                                        _MiniTag(label: 'Voice support'),
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                          )
-                              .animate()
-                              .fadeIn(delay: 120.ms, duration: 500.ms)
-                              .slideY(begin: 0.06, end: 0),
-                          SizedBox(height: compact ? 14 : 18),
-                          Text(
-                            'Apna Phone. Apni Bhasha. Apni Azaadi.',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: SahayakColors.textMuted(isDark),
+                                SizedBox(height: compact ? 18 : 22),
+                                GlassButton(
+                                  label: 'Continue securely',
+                                  icon: Icons.arrow_forward_rounded,
+                                  gradient: ctaGradient,
+                                  loading: _loading,
+                                  onPressed: _loading ? null : _signIn,
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 120.ms, duration: 500.ms)
+                            .slideY(begin: 0.06, end: 0),
+                        SizedBox(height: compact ? 12 : 16),
+                        Text(
+                          'Apna Phone. Apni Bhasha. Apni Azaadi.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: SahayakColors.textMuted(isDark),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -357,17 +343,17 @@ class _BrandBlock extends StatelessWidget {
                 fontSize: compact ? 13 : null,
               ),
         ),
-        SizedBox(height: compact ? 8 : 10),
+        SizedBox(height: compact ? 4 : 10),
         Text(
           'SAHAYAK',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 color: accent,
                 letterSpacing: 3.4,
-                fontSize: compact ? 44 : null,
+                fontSize: compact ? 40 : null,
               ),
         ),
-        SizedBox(height: compact ? 6 : 8),
+        SizedBox(height: compact ? 4 : 8),
         Text(
           'Calm digital support for families and elders',
           textAlign: TextAlign.center,
