@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/colors.dart';
 import '../../../shared/widgets/glass_button.dart';
-import '../../../shared/widgets/glass_card.dart';
 
 class Step1Welcome extends StatelessWidget {
   const Step1Welcome({
@@ -35,89 +34,95 @@ class Step1Welcome extends StatelessWidget {
     final accent = Theme.of(context).colorScheme.primary;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          GlassCard(
-            padding: const EdgeInsets.all(24),
-            accentColor: accent,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 76,
-                  height: 76,
-                  decoration: BoxDecoration(
-                    gradient: SahayakColors.primaryGradient(
-                      accent,
-                      SahayakColors.ashokaGreen,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: accent.withValues(alpha: 0.22),
-                        blurRadius: 24,
-                        offset: const Offset(0, 12),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'S',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ).animate().fadeIn(duration: 320.ms).scale(
-                      begin: const Offset(0.92, 0.92),
-                      curve: Curves.easeOutBack,
-                    ),
-                const SizedBox(height: 22),
-                Text(
-                  'Sahayak',
-                  style: Theme.of(context).textTheme.displaySmall,
-                ).animate().fadeIn(delay: 90.ms, duration: 300.ms),
-                const SizedBox(height: 10),
-                Text(
-                  'Your phone. Your language. Your freedom.',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ).animate().fadeIn(delay: 150.ms, duration: 320.ms),
-                const SizedBox(height: 10),
-                Text(
-                  'Choose the elder\'s most comfortable language first. The entire app experience will adapt from here.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: SahayakColors.textMuted(isDark),
-                      ),
-                ).animate().fadeIn(delay: 210.ms, duration: 340.ms),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: const [
-                    _FeatureChip(label: 'Voice first'),
-                    _FeatureChip(label: 'Large text'),
-                    _FeatureChip(label: 'Offline ready'),
-                  ],
-                ).animate().fadeIn(delay: 260.ms, duration: 320.ms),
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: SahayakColors.primaryGradient(
+                accent,
+                SahayakColors.ashokaGreen,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.22),
+                  blurRadius: 26,
+                  offset: const Offset(0, 14),
+                ),
               ],
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14),
+              ),
             ),
+            alignment: Alignment.center,
+            child: const Text(
+              'S',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ).animate().fadeIn(duration: 320.ms).scale(
+                begin: const Offset(0.92, 0.92),
+                curve: Curves.easeOutBack,
+              ),
+          const SizedBox(height: 22),
+          Text(
+            'Sahayak',
+            style: Theme.of(context).textTheme.displaySmall,
+            textAlign: TextAlign.center,
+          ).animate().fadeIn(delay: 90.ms, duration: 300.ms),
+          const SizedBox(height: 10),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Text(
+              'Your phone. Your language. Your freedom.',
+              style: Theme.of(context).textTheme.headlineLarge,
+              textAlign: TextAlign.center,
+            ).animate().fadeIn(delay: 150.ms, duration: 320.ms),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 10),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 330),
+            child: Text(
+              'Choose the elder\'s most comfortable language first. The full app experience will adapt from here.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: SahayakColors.textMuted(isDark),
+                  ),
+            ).animate().fadeIn(delay: 210.ms, duration: 340.ms),
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: const [
+              _FeatureChip(label: 'Voice first'),
+              _FeatureChip(label: 'Large text'),
+              _FeatureChip(label: 'Offline ready'),
+            ],
+          ).animate().fadeIn(delay: 260.ms, duration: 320.ms),
+          const SizedBox(height: 28),
           Text(
             'Select a starting language',
             style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           Text(
             'This can be changed later from Settings.',
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: SahayakColors.textMuted(isDark),
                 ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -125,7 +130,7 @@ class Step1Welcome extends StatelessWidget {
               crossAxisCount: 2,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
-              childAspectRatio: 1.45,
+              childAspectRatio: 1.18,
             ),
             itemCount: _languages.length,
             itemBuilder: (context, index) {
@@ -137,12 +142,25 @@ class Step1Welcome extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
                   decoration: BoxDecoration(
-                    color: isActive
-                        ? accent.withValues(alpha: isDark ? 0.18 : 0.14)
-                        : SahayakColors.glassFill(isDark),
-                    borderRadius: BorderRadius.circular(22),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isActive
+                          ? [
+                              accent.withValues(alpha: isDark ? 0.22 : 0.18),
+                              SahayakColors.ashokaGreen
+                                  .withValues(alpha: isDark ? 0.14 : 0.10),
+                            ]
+                          : [
+                              SahayakColors.glassFill(isDark),
+                              isDark
+                                  ? Colors.white.withValues(alpha: 0.03)
+                                  : Colors.white.withValues(alpha: 0.72),
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(26),
                     border: Border.all(
                       color: isActive ? accent : SahayakColors.glassBorder(isDark),
                       width: isActive ? 1.8 : 1,

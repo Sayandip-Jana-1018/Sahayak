@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/colors.dart';
-import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/widgets/immersive_shell.dart';
 import 'step1_welcome.dart';
 import 'step2_elder_details.dart';
 import 'step3_language.dart';
@@ -57,34 +57,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final accent = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: SahayakColors.heroGlow(isDark, accent),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -120,
-              right: -80,
-              child: _Aura(
-                color: SahayakColors.voiceViolet.withValues(alpha: 0.18),
-                size: 260,
-              ),
-            ),
-            Positioned(
-              bottom: -140,
-              left: -70,
-              child: _Aura(
-                color: SahayakColors.ashokaGreen.withValues(alpha: 0.14),
-                size: 260,
-              ),
-            ),
-            SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-                    child: Row(
+      body: ImmersiveShell(
+        primaryGlow: accent,
+        secondaryGlow: SahayakColors.voiceViolet,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Column(
+                  children: [
+                    Row(
                       children: [
                         _HeaderButton(
                           icon: Icons.arrow_back_rounded,
@@ -93,27 +76,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: GlassCard(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Step ${_currentPage + 1} of 4',
-                                  style: Theme.of(context).textTheme.labelLarge,
+                          child: Text(
+                            'Step ${_currentPage + 1} of 4',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                const SizedBox(height: 8),
-                                _ProgressBar(
-                                  current: _currentPage,
-                                  total: 4,
-                                  accent: accent,
-                                  isDark: isDark,
-                                ),
-                              ],
-                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -121,64 +89,71 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           onPressed: () => context.go('/home'),
                           child: Text(
                             'Skip',
-                            style: TextStyle(
-                              color: SahayakColors.textMuted(isDark),
-                            ),
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  color: SahayakColors.textMuted(isDark),
+                                ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      onPageChanged: (index) => setState(() => _currentPage = index),
-                      children: [
-                        Step1Welcome(
-                          selectedLanguage: _selectedLanguage,
-                          onLanguageSelected: (lang) {
-                            setState(() => _selectedLanguage = lang);
-                            _nextPage();
-                          },
-                        ),
-                        Step2ElderDetails(
-                          onNext: (name, age, city, state, phone, relationship) {
-                            setState(() {
-                              _elderName = name;
-                              _elderAge = age;
-                              _city = city;
-                              _state = state;
-                              _phone = phone;
-                              _relationship = relationship;
-                            });
-                            _nextPage();
-                          },
-                        ),
-                        Step3Language(
-                          initialLanguage: _selectedLanguage,
-                          onNext: (lang) {
-                            setState(() => _selectedLanguage = lang);
-                            _nextPage();
-                          },
-                        ),
-                        Step4DeviceSetup(
-                          elderName: _elderName ?? '',
-                          language: _selectedLanguage ?? 'hi',
-                          ageYears: _elderAge,
-                          city: _city,
-                          state: _state,
-                          phone: _phone,
-                          relationship: _relationship,
-                          onComplete: () => context.go('/home'),
-                        ),
-                      ],
+                    const SizedBox(height: 12),
+                    _ProgressBar(
+                      current: _currentPage,
+                      total: 4,
+                      accent: accent,
+                      isDark: isDark,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) => setState(() => _currentPage = index),
+                  children: [
+                    Step1Welcome(
+                      selectedLanguage: _selectedLanguage,
+                      onLanguageSelected: (lang) {
+                        setState(() => _selectedLanguage = lang);
+                        _nextPage();
+                      },
+                    ),
+                    Step2ElderDetails(
+                      onNext: (name, age, city, state, phone, relationship) {
+                        setState(() {
+                          _elderName = name;
+                          _elderAge = age;
+                          _city = city;
+                          _state = state;
+                          _phone = phone;
+                          _relationship = relationship;
+                        });
+                        _nextPage();
+                      },
+                    ),
+                    Step3Language(
+                      initialLanguage: _selectedLanguage,
+                      onNext: (lang) {
+                        setState(() => _selectedLanguage = lang);
+                        _nextPage();
+                      },
+                    ),
+                    Step4DeviceSetup(
+                      elderName: _elderName ?? '',
+                      language: _selectedLanguage ?? 'hi',
+                      ageYears: _elderAge,
+                      city: _city,
+                      state: _state,
+                      phone: _phone,
+                      relationship: _relationship,
+                      onComplete: () => context.go('/home'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -208,18 +183,26 @@ class _ProgressBar extends StatelessWidget {
         return Expanded(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 240),
-            height: 6,
-            margin: const EdgeInsets.symmetric(horizontal: 2),
+            height: 8,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
+              gradient: isComplete || isActive
+                  ? LinearGradient(
+                      colors: [
+                        accent,
+                        SahayakColors.saffron.withValues(alpha: 0.92),
+                      ],
+                    )
+                  : null,
               color: isComplete || isActive
-                  ? accent
+                  ? null
                   : SahayakColors.glassBorder(isDark),
               boxShadow: isActive
                   ? [
                       BoxShadow(
-                        color: accent.withValues(alpha: 0.32),
-                        blurRadius: 10,
+                        color: accent.withValues(alpha: 0.30),
+                        blurRadius: 12,
                       ),
                     ]
                   : null,
@@ -251,44 +234,28 @@ class _HeaderButton extends StatelessWidget {
       opacity: visible ? 1 : 0,
       child: IgnorePointer(
         ignoring: !visible,
-        child: GlassCard(
-          padding: const EdgeInsets.all(10),
-          borderRadius: 18,
+        child: GestureDetector(
           onTap: onTap,
-          child: Icon(
-            icon,
-            color: SahayakColors.textPrimary(isDark),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Aura extends StatelessWidget {
-  const _Aura({
-    required this.color,
-    required this.size,
-  });
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: color,
-              blurRadius: 140,
-              spreadRadius: 30,
+          child: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.06),
+              ),
             ),
-          ],
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              color: SahayakColors.textPrimary(isDark),
+            ),
+          ),
         ),
       ),
     );
