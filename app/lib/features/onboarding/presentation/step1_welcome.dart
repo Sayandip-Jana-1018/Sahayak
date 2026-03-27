@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../core/theme/colors.dart';
 import '../../../shared/widgets/glass_button.dart';
@@ -38,40 +39,60 @@ class Step1Welcome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 92,
-            height: 92,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: SahayakColors.primaryGradient(
-                accent,
-                SahayakColors.ashokaGreen,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.22),
-                  blurRadius: 26,
-                  offset: const Offset(0, 14),
-                ),
-              ],
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.14),
-              ),
-            ),
+          Stack(
             alignment: Alignment.center,
-            child: const Text(
-              'S',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 36,
-                fontWeight: FontWeight.w800,
+            children: [
+              Container(
+                width: 210,
+                height: 210,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      accent.withValues(alpha: isDark ? 0.20 : 0.14),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
-            ),
+              Container(
+                width: 118,
+                height: 118,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.16),
+                      Colors.white.withValues(alpha: 0.04),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.20),
+                      blurRadius: 28,
+                      offset: const Offset(0, 16),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/sahayak-medallion.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ],
           ).animate().fadeIn(duration: 320.ms).scale(
                 begin: const Offset(0.92, 0.92),
                 curve: Curves.easeOutBack,
               ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           Text(
             'Sahayak',
             style: Theme.of(context).textTheme.displaySmall,
@@ -79,21 +100,24 @@ class Step1Welcome extends StatelessWidget {
           ).animate().fadeIn(delay: 90.ms, duration: 300.ms),
           const SizedBox(height: 10),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 320),
+            constraints: const BoxConstraints(maxWidth: 330),
             child: Text(
               'Your phone. Your language. Your freedom.',
-              style: Theme.of(context).textTheme.headlineLarge,
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    height: 1.08,
+                  ),
               textAlign: TextAlign.center,
             ).animate().fadeIn(delay: 150.ms, duration: 320.ms),
           ),
           const SizedBox(height: 10),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 330),
+            constraints: const BoxConstraints(maxWidth: 340),
             child: Text(
-              'Choose the elder\'s most comfortable language first. The full app experience will adapt from here.',
+              'Start with the language the elder feels most natural speaking. Sahayak will shape the full experience around it.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: SahayakColors.textMuted(isDark),
+                    height: 1.5,
                   ),
             ).animate().fadeIn(delay: 210.ms, duration: 340.ms),
           ),
@@ -108,6 +132,81 @@ class Step1Welcome extends StatelessWidget {
               _FeatureChip(label: 'Offline ready'),
             ],
           ).animate().fadeIn(delay: 260.ms, duration: 320.ms),
+          const SizedBox(height: 22),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        Colors.white.withValues(alpha: 0.05),
+                        SahayakColors.voiceViolet.withValues(alpha: 0.04),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 0.88),
+                        accent.withValues(alpha: 0.05),
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.16 : 0.04),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.04)
+                        : Colors.white.withValues(alpha: 0.55),
+                  ),
+                  child: Center(
+                    child: Lottie.asset(
+                      'assets/lottie/family.json',
+                      repeat: true,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Built for real families',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Simple voice, large text, and calm guidance from the very first screen.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: SahayakColors.textMuted(isDark),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 280.ms, duration: 320.ms),
           const SizedBox(height: 28),
           Text(
             'Select a starting language',
@@ -150,8 +249,9 @@ class Step1Welcome extends StatelessWidget {
                       colors: isActive
                           ? [
                               accent.withValues(alpha: isDark ? 0.22 : 0.18),
-                              SahayakColors.ashokaGreen
-                                  .withValues(alpha: isDark ? 0.14 : 0.10),
+                              SahayakColors.ashokaGreen.withValues(
+                                alpha: isDark ? 0.14 : 0.10,
+                              ),
                             ]
                           : [
                               SahayakColors.glassFill(isDark),
