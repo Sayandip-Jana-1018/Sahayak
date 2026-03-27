@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../network/api_client.dart';
 import '../config/api_config.dart';
@@ -24,16 +25,35 @@ class AuthService {
   );
   static const _jwtKey = 'sahayak_clerk_jwt';
   static const _userKey = 'sahayak_user_json';
+  static const _callbackScheme = 'sahayak';
+  static const _callbackHost = 'auth-callback';
 
   UserModel? _currentUser;
   String? _jwtToken;
   bool _hasActiveProfile = false;
   bool _listeningForTokenRefresh = false;
+  String? _draftEmail;
+  String? _draftPassword;
 
   UserModel? get currentUser => _currentUser;
   bool get isSignedIn => _jwtToken != null;
   bool get hasActiveProfile => _hasActiveProfile;
   String? get token => _jwtToken;
+  String? get draftEmail => _draftEmail;
+  String? get draftPassword => _draftPassword;
+
+  void cacheLoginDraft({
+    required String email,
+    required String password,
+  }) {
+    _draftEmail = email;
+    _draftPassword = password;
+  }
+
+  void clearLoginDraft() {
+    _draftEmail = null;
+    _draftPassword = null;
+  }
 
   /// Called on cold start — restores JWT from secure storage.
   Future<void> init() async {
@@ -81,6 +101,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    cacheLoginDraft(email: email, password: password);
     final response = await ApiClient.instance.post(
       '/api/auth/sign-in',
       data: {'identifier': email, 'password': password},
@@ -96,12 +117,44 @@ class AuthService {
     SocketService.instance.connect(_jwtToken!);
 
     await _registerCurrentUserDevice();
+    clearLoginDraft();
 
     return _currentUser!;
   }
 
-  /// Called externally once a Clerk JWT is obtained (e.g. from WebView flow).
-  Future<UserModel> setClerkToken(String jwtToken) async {
+  Future<UserModel> signInWithSocialProvider(String provider) async {
+    final normalizedProvider = provider.trim().toLowerCase();
+    if (normalizedProvider != 'google' && normalizedProvider != 'github') {
+      throw Exception('Unsupported social provider: $provider');
+    }
+
+    final authUri = Uri.parse('${ApiConfig.webBaseUrl}/mobile-auth/start').replace(
+      queryParameters: {
+        'provider': normalizedProvider,
+        'redirect_uri': '$_callbackScheme://$_callbackHost',
+      },
+    );
+
+    final result = await FlutterWebAuth2.authenticate(
+      url: authUri.toString(),
+      callbackUrlScheme: _callbackScheme,
+    );
+    final resultUri = Uri.parse(result);
+    final error = resultUri.queryParameters['error'];
+    if (error != null && error.isNotEmpty) {
+      throw Exception(error);
+    }
+
+    final token = resultUri.queryParameters['token'];
+    if (token == null || token.isEmpty) {
+      throw Exception('The sign-in provider did not return an app session.');
+    }
+
+    return setSessionToken(token);
+  }
+
+  /// Called externally once an app JWT is obtained.
+  Future<UserModel> setSessionToken(String jwtToken) async {
     _jwtToken = jwtToken;
     await _storage.write(key: _jwtKey, value: jwtToken);
     ApiClient.instance.setToken(jwtToken);
@@ -112,8 +165,11 @@ class AuthService {
 
     SocketService.instance.connect(jwtToken);
     await _registerCurrentUserDevice();
+    clearLoginDraft();
     return _currentUser!;
   }
+
+  Future<UserModel> setClerkToken(String jwtToken) => setSessionToken(jwtToken);
 
   void setActiveProfile(String profileId) {
     StorageService.instance.setActiveProfileId(profileId);
@@ -127,7 +183,7 @@ class AuthService {
     }
   }
 
-  Future<void> signOut() async {
+  Future<void> signOut({bool preserveDraft = false}) async {
     SocketService.instance.disconnect();
     ApiClient.instance.clearToken();
     await StorageService.instance.clearAll();
@@ -135,6 +191,9 @@ class AuthService {
     _currentUser = null;
     _jwtToken = null;
     _hasActiveProfile = false;
+    if (!preserveDraft) {
+      clearLoginDraft();
+    }
   }
 
   Future<void> _clearSecureStorage() async {

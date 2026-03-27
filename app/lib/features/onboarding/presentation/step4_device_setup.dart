@@ -9,8 +9,10 @@ import '../../../core/network/api_client.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/typography.dart';
 import '../../../shared/widgets/glass_button.dart';
 import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/widgets/story_medallion.dart';
 
 class Step4DeviceSetup extends StatefulWidget {
   const Step4DeviceSetup({
@@ -158,12 +160,39 @@ class _Step4DeviceSetupState extends State<Step4DeviceSetup>
   @override
   Widget build(BuildContext context) {
     final accent = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          StoryMedallion(
+            accent: accent,
+            secondaryAccent: SahayakColors.voiceViolet,
+            size: 136,
+            compact: true,
+          )
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
+              .moveY(begin: 0, end: -5, duration: 2600.ms),
+          const SizedBox(height: 18),
+          Text(
+            'Bringing Sahayak to life',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontFamily: SahayakTypography.displayFont,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'We are linking this phone, the elder profile, and the dashboard into one calm setup.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: SahayakColors.textMuted(isDark),
+                  height: 1.45,
+                ),
+          ),
+          const SizedBox(height: 18),
           if (_submitting) ...[
             AccentGlassCard(
               accent: accent,
@@ -203,7 +232,9 @@ class _Step4DeviceSetupState extends State<Step4DeviceSetup>
                   const SizedBox(height: 24),
                   Text(
                     'Setting up Sahayak',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontFamily: SahayakTypography.displayFont,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
@@ -231,7 +262,9 @@ class _Step4DeviceSetupState extends State<Step4DeviceSetup>
                   const SizedBox(height: 22),
                   Text(
                     'Everything is ready',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontFamily: SahayakTypography.displayFont,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
@@ -261,7 +294,9 @@ class _Step4DeviceSetupState extends State<Step4DeviceSetup>
                   const SizedBox(height: 18),
                   Text(
                     'Setup could not finish',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontFamily: SahayakTypography.displayFont,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),

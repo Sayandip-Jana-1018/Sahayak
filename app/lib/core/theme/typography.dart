@@ -46,9 +46,9 @@ extension FontScaleExt on FontScale {
 class SahayakTypography {
   SahayakTypography._();
 
-  static const String displayFont = 'CabinetGrotesk';
+  static const String displayFont = 'PlayfairDisplay';
   static const String bodyFont = 'NotoSansDevanagari';
-  static const String accentFont = 'DMSerifDisplay';
+  static const String accentFont = 'PlayfairDisplay';
 
   static TextTheme buildTextTheme(FontScale scale, bool isDark) {
     final primary = SahayakColors.textPrimary(isDark);
@@ -74,7 +74,7 @@ class SahayakTypography {
   }
 
   static TextStyle statNumber(double size, Color color) => TextStyle(
-        fontFamily: accentFont,
+        fontFamily: displayFont,
         fontFamilyFallback: const [bodyFont, 'serif'],
         fontSize: size,
         fontWeight: FontWeight.w400,
@@ -86,7 +86,7 @@ class SahayakTypography {
   static TextStyle _display(double size, FontWeight weight, Color color) =>
       TextStyle(
         fontFamily: displayFont,
-        fontFamilyFallback: const [bodyFont, 'sans-serif'],
+        fontFamilyFallback: const [bodyFont, 'serif'],
         fontSize: size,
         fontWeight: weight,
         height: 1.15,
@@ -96,8 +96,8 @@ class SahayakTypography {
 
   static TextStyle _body(double size, FontWeight weight, Color color) =>
       TextStyle(
-        fontFamily: bodyFont,
-        fontFamilyFallback: const ['sans-serif'],
+        fontFamily: displayFont,
+        fontFamilyFallback: const [bodyFont, 'serif'],
         fontSize: size,
         fontWeight: weight,
         height: 1.45,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/colors.dart';
 
@@ -116,6 +117,8 @@ class _GlowOrb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final drift = size > 240 ? 12.0 : 8.0;
+
     return Container(
       width: size,
       height: size,
@@ -129,6 +132,20 @@ class _GlowOrb extends StatelessWidget {
           ],
         ),
       ),
-    );
+    )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .moveY(
+          begin: 0,
+          end: drift,
+          duration: 5200.ms,
+          curve: Curves.easeInOut,
+        )
+        .then()
+        .moveX(
+          begin: 0,
+          end: -drift * 0.65,
+          duration: 5200.ms,
+          curve: Curves.easeInOut,
+        );
   }
 }

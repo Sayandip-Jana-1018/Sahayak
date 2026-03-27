@@ -4,10 +4,12 @@ class ApiConfig {
   // ── Base URL ──────────────────────────────────────────────────────────────
   // Emulator: 10.0.2.2:8080 | Real device: <your LAN IP>:8080
   static const String baseUrl = 'http://10.0.2.2:8080';
+  static const String webBaseUrl = 'http://10.0.2.2:3000';
 
   // ── Auth ────────────────────────────────────────────────────────────────────
-  static const String signIn       = '/api/auth/sign-in';
-  static const String profile      = '/api/profile';
+  static const String signIn         = '/api/auth/sign-in';
+  static const String socialExchange = '/api/auth/social-exchange';
+  static const String profile        = '/api/profile';
 
   // ── Onboarding ──────────────────────────────────────────────────────────────
   static const String onboardingStatus   = '/api/onboarding/status';

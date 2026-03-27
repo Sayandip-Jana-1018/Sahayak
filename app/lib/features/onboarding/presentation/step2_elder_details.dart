@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/typography.dart';
 import '../../../shared/widgets/glass_button.dart';
 import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/widgets/story_medallion.dart';
 
 class Step2ElderDetails extends StatefulWidget {
   const Step2ElderDetails({super.key, required this.onNext});
@@ -63,24 +66,65 @@ class _Step2ElderDetailsState extends State<Step2ElderDetails> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            StoryMedallion(
+              accent: accent,
+              secondaryAccent: SahayakColors.saffron,
+              size: 126,
+              compact: true,
+            )
+                .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                .moveY(begin: 0, end: -5, duration: 2800.ms),
+            const SizedBox(height: 18),
             Text(
               'Tell us about the elder',
-              style: Theme.of(context).textTheme.displaySmall,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontFamily: SahayakTypography.displayFont,
+                  ),
             ),
             const SizedBox(height: 8),
-            Text(
-              'We only ask for what is needed to personalize reminders, language, and safety support.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: SahayakColors.textMuted(isDark),
-                  ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 310),
+              child: Text(
+                'A few details help Sahayak shape reminders, language, and safety support with care.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: SahayakColors.textMuted(isDark),
+                      height: 1.5,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _StoryChip(
+                  icon: Icons.favorite_rounded,
+                  label: 'Personal care',
+                  accent: accent,
+                ),
+                const _StoryChip(
+                  icon: Icons.shield_outlined,
+                  label: 'Safer setup',
+                  accent: SahayakColors.ashokaGreen,
+                ),
+                const _StoryChip(
+                  icon: Icons.translate_rounded,
+                  label: 'Language aware',
+                  accent: SahayakColors.voiceViolet,
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             GlassCard(
@@ -88,7 +132,7 @@ class _Step2ElderDetailsState extends State<Step2ElderDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _FieldLabel(label: 'Full name'),
+                  const _FieldLabel(label: 'Full name'),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _nameCtrl,
@@ -232,6 +276,47 @@ class _Step2ElderDetailsState extends State<Step2ElderDetails> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StoryChip extends StatelessWidget {
+  const _StoryChip({
+    required this.icon,
+    required this.label,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: accent.withValues(alpha: isDark ? 0.10 : 0.08),
+        border: Border.all(
+          color: accent.withValues(alpha: isDark ? 0.22 : 0.14),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: accent),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
       ),
     );
   }

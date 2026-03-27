@@ -7,7 +7,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/services/upi_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/typography.dart';
 import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/widgets/story_medallion.dart';
+import '../../settings/bloc/settings_bloc.dart';
 import '../bloc/voice_bloc.dart';
 import 'widgets/payment_handoff_sheet.dart';
 
@@ -76,6 +79,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = Theme.of(context).colorScheme.primary;
+    final isHindi = Localizations.localeOf(context).languageCode == 'hi';
 
     return Scaffold(
       body: DecoratedBox(
@@ -130,20 +134,14 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                               const SizedBox(width: 8),
                               InkWell(
                                 onTap: () {
-                                  final langs = [
-                                    'hi',
-                                    'en',
-                                    'ta',
-                                    'bn',
-                                    'mr',
-                                    'te',
-                                    'kn',
-                                  ];
+                                  final langs = ['hi', 'en'];
                                   final idx = langs.indexOf(_language);
-                                  setState(() {
-                                    _language = langs[(idx + 1) % langs.length];
-                                  });
+                                  final next = langs[(idx + 1) % langs.length];
+                                  setState(() => _language = next);
                                   StorageService.instance.setLanguage(_language);
+                                  context
+                                      .read<SettingsBloc>()
+                                      .add(SetLanguage(next));
                                 },
                                 child: Icon(
                                   Icons.translate_rounded,
@@ -159,9 +157,56 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                   ),
                   const SizedBox(height: 22),
                   Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Column(
+                      children: [
+                        StoryMedallion(
+                          accent: accent,
+                          secondaryAccent: SahayakColors.voiceViolet,
+                          size: 138,
+                          compact: true,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          isHindi
+                              ? 'आवाज़ से सहज साथ'
+                              : 'Voice with calm presence',
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.displaySmall?.copyWith(
+                                    fontFamily: SahayakTypography.displayFont,
+                                    height: 1.04,
+                                  ),
+                        ),
+                        const SizedBox(height: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 310),
+                          child: Text(
+                            isHindi
+                                ? 'बोलिए, सुनिए, और स्नेह के साथ जवाब पाइए।'
+                                : 'Speak naturally, hear clearly, and move through the phone with less friction.',
+                            textAlign: TextAlign.center,
+                            style:
+                                Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: SahayakColors.textMuted(isDark),
+                                      height: 1.5,
+                                    ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(duration: 360.ms)
+                      .slideY(begin: 0.06, end: 0),
+                  const SizedBox(height: 18),
+                  Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
-                      state.transcribedText ?? 'Tap the mic and speak naturally.',
+                      state.transcribedText ??
+                          (isHindi
+                              ? 'माइक दबाइए और स्वाभाविक रूप से बोलिए।'
+                              : 'Tap the mic and speak naturally.'),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -237,6 +282,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                   ),
                   const SizedBox(height: 20),
                   _QuickVoiceActions(
+                    isHindi: isHindi,
                     onSelected: (text) {
                       context.read<VoiceBloc>().add(
                             VoiceSubmit(text: text, language: _language),
@@ -255,8 +301,12 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                               Expanded(
                                 child: Text(
                                   _companionMode
-                                      ? 'Companion mode is on'
-                                      : 'Manual text fallback',
+                                      ? (isHindi
+                                          ? 'साथी मोड चालू है'
+                                          : 'Companion mode is on')
+                                      : (isHindi
+                                          ? 'मैनुअल टेक्स्ट विकल्प'
+                                          : 'Manual text fallback'),
                                   style: Theme.of(context).textTheme.labelMedium,
                                 ),
                               ),
@@ -278,7 +328,8 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                                   textInputAction: TextInputAction.send,
                                   onSubmitted: (_) => _submitTypedText(),
                                   decoration: const InputDecoration(
-                                    hintText: 'Type only if voice is not possible',
+                                    hintText:
+                                        'Type only if voice is not possible',
                                   ),
                                 ),
                               ),
@@ -311,16 +362,21 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isHindi = Localizations.localeOf(context).languageCode == 'hi';
     final (label, color, icon) = switch (status) {
-      VoiceStatus.idle => ('Ready', Colors.white, Icons.check_circle_rounded),
+      VoiceStatus.idle => (
+          isHindi ? 'तैयार' : 'Ready',
+          Colors.white,
+          Icons.check_circle_rounded,
+        ),
       VoiceStatus.listening =>
-        ('Listening', SahayakColors.sosRed, Icons.hearing_rounded),
+        (isHindi ? 'सुन रहा है' : 'Listening', SahayakColors.sosRed, Icons.hearing_rounded),
       VoiceStatus.processing =>
-        ('Thinking', SahayakColors.medicineAmber, Icons.auto_awesome_rounded),
+        (isHindi ? 'सोच रहा है' : 'Thinking', SahayakColors.medicineAmber, Icons.auto_awesome_rounded),
       VoiceStatus.speaking =>
-        ('Speaking', SahayakColors.voiceViolet, Icons.volume_up_rounded),
+        (isHindi ? 'बोल रहा है' : 'Speaking', SahayakColors.voiceViolet, Icons.volume_up_rounded),
       VoiceStatus.error =>
-        ('Retry', SahayakColors.warningOrange, Icons.error_outline_rounded),
+        (isHindi ? 'फिर कोशिश' : 'Retry', SahayakColors.warningOrange, Icons.error_outline_rounded),
     };
 
     return GlassCard(
@@ -490,20 +546,33 @@ class _HeroMicButton extends StatelessWidget {
 }
 
 class _QuickVoiceActions extends StatelessWidget {
-  const _QuickVoiceActions({required this.onSelected});
+  const _QuickVoiceActions({
+    required this.onSelected,
+    required this.isHindi,
+  });
 
   final ValueChanged<String> onSelected;
+  final bool isHindi;
 
   @override
   Widget build(BuildContext context) {
-    final actions = const [
-      ('Pay', 'Beti ko 500 bhejo'),
-      ('Balance', 'Mera balance batao'),
-      ('Medicine', 'Dawai ki yaad dilao'),
-      ('Help', 'Mujhe madad chahiye'),
-      ('Schemes', 'Mere liye sarkari yojana batao'),
-      ('Document', 'Yeh document samjhao'),
-    ];
+    final actions = isHindi
+        ? const [
+            ('भुगतान', 'बेटी को 500 भेजो'),
+            ('बैलेंस', 'मेरा बैलेंस बताओ'),
+            ('दवाई', 'दवाई की याद दिलाओ'),
+            ('मदद', 'मुझे मदद चाहिए'),
+            ('योजना', 'मेरे लिए सरकारी योजना बताओ'),
+            ('दस्तावेज़', 'यह दस्तावेज़ समझाओ'),
+          ]
+        : const [
+            ('Pay', 'Send 500 to daughter'),
+            ('Balance', 'Check my balance'),
+            ('Medicine', 'Remind me about medicine'),
+            ('Help', 'I need help'),
+            ('Schemes', 'Tell me about government schemes'),
+            ('Document', 'Explain this document'),
+          ];
 
     return SizedBox(
       height: 52,

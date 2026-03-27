@@ -93,15 +93,6 @@ class _SahayakAppState extends State<SahayakApp> with WidgetsBindingObserver {
                 themeMode: themeState.isDark ? ThemeMode.dark : ThemeMode.light,
                 supportedLocales: const [
                   Locale('hi'),
-                  Locale('ta'),
-                  Locale('bn'),
-                  Locale('mr'),
-                  Locale('te'),
-                  Locale('kn'),
-                  Locale('gu'),
-                  Locale('pa'),
-                  Locale('ml'),
-                  Locale('ur'),
                   Locale('en'),
                 ],
                 localizationsDelegates: const [

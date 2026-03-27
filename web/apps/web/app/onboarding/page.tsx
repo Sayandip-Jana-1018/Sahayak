@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { Suspense, useEffect, useCallback, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check } from 'lucide-react';
@@ -15,7 +15,7 @@ import { Step5Complete } from '@/components/onboarding/Step5Complete';
 
 const STEP_LABELS = ['Who?', 'Details', 'Voice', 'Install', 'Done'];
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const router = useRouter();
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -430,5 +430,13 @@ export default function OnboardingPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardingPageContent />
+    </Suspense>
   );
 }

@@ -1,11 +1,10 @@
 // DEV_ONLY: Development sign-in bridge for Flutter app.
-// TODO: Replace with Clerk WebView flow (flutter_web_auth_2) before production launch.
-// This route accepts email/password, verifies via Clerk Backend API,
-// and returns a signed JWT that the Flutter app can use for all API calls.
+// Social sign-in uses Clerk OAuth in the browser, then exchanges the Clerk
+// session token for the same app JWT shape used by the mobile app/API.
 
 import type { FastifyInstance } from 'fastify';
-import { createClerkClient } from '@clerk/backend';
-import { db, users, eq } from '@sahayak/db';
+import { createClerkClient, verifyToken } from '@clerk/backend';
+import { db, eq, users } from '@sahayak/db';
 import { z } from 'zod';
 
 const signInSchema = z.object({
@@ -13,27 +12,92 @@ const signInSchema = z.object({
   password: z.string().min(6),
 });
 
+const socialExchangeSchema = z.object({
+  clerkToken: z.string().min(1),
+});
+
+type ClerkUserSummary = {
+  id: string;
+  email: string | null;
+  fullName: string | null;
+  phone: string | null;
+};
+
+async function getOrCreateDbUser(clerkUser: ClerkUserSummary) {
+  let [dbUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.clerkId, clerkUser.id))
+    .limit(1);
+
+  if (!dbUser) {
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        clerkId: clerkUser.id,
+        email: clerkUser.email,
+        fullName: clerkUser.fullName,
+        phone: clerkUser.phone,
+        role: 'family',
+        onboardingComplete: false,
+      })
+      .returning();
+    dbUser = newUser;
+  }
+
+  return dbUser;
+}
+
+function createAppSessionToken(
+  app: FastifyInstance,
+  params: {
+    clerkId: string;
+    email: string | null;
+    dbUserId: string;
+  },
+) {
+  return app.jwt.sign(
+    {
+      sub: params.clerkId,
+      email: params.email,
+      dbId: params.dbUserId,
+    },
+    { expiresIn: '7d' },
+  );
+}
+
+function buildUserResponse(dbUser: any, clerkUser: ClerkUserSummary) {
+  return {
+    id: dbUser.id,
+    clerkId: clerkUser.id,
+    email: dbUser.email,
+    phone: dbUser.phone,
+    fullName: dbUser.fullName,
+    avatarUrl: dbUser.avatarUrl,
+    role: dbUser.role,
+    organizationId: dbUser.organizationId,
+    onboardingComplete: dbUser.onboardingComplete,
+  };
+}
+
 export async function signInRoutes(app: FastifyInstance) {
   const clerk = createClerkClient({
     secretKey: process.env.CLERK_SECRET_KEY!,
   });
 
-  // DEV_ONLY: POST /api/auth/sign-in
   app.post('/sign-in', async (request, reply) => {
     const parsed = signInSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({
         statusCode: 400,
         error: 'Validation Error',
-        message: parsed.error.issues.map((i) => i.message).join(', '),
+        message: parsed.error.issues.map((issue) => issue.message).join(', '),
       });
     }
 
     const { identifier, password } = parsed.data;
 
     try {
-      // Step 1: Verify credentials via Clerk Backend API
-      // Use Clerk's user list to find the user by email, then verify password
       const clerkUsers = await clerk.users.getUserList({
         emailAddress: [identifier],
       });
@@ -42,13 +106,12 @@ export async function signInRoutes(app: FastifyInstance) {
         return reply.status(401).send({
           statusCode: 401,
           error: 'Unauthorized',
-          message: 'गलत ईमेल या पासवर्ड। कृपया फिर से कोशिश करें।',
+          message: 'Invalid email or password. Please try again.',
         });
       }
 
       const clerkUser = clerkUsers.data[0];
 
-      // Step 2: Verify password using Clerk's verifyPassword
       try {
         await clerk.users.verifyPassword({
           userId: clerkUser.id,
@@ -58,67 +121,96 @@ export async function signInRoutes(app: FastifyInstance) {
         return reply.status(401).send({
           statusCode: 401,
           error: 'Unauthorized',
-          message: 'गलत ईमेल या पासवर्ड। कृपया फिर से कोशिश करें।',
+          message: 'Invalid email or password. Please try again.',
         });
       }
 
-      // Step 3: Get or create the user in our DB
-      let [dbUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.clerkId, clerkUser.id))
-        .limit(1);
+      const fullName = [clerkUser.firstName, clerkUser.lastName]
+        .filter((value): value is string => Boolean(value))
+        .join(' ')
+        .trim();
 
-      if (!dbUser) {
-        // Auto-create user in our DB on first sign-in from Flutter
-        const [newUser] = await db
-          .insert(users)
-          .values({
-            clerkId: clerkUser.id,
-            email: clerkUser.emailAddresses[0]?.emailAddress || identifier,
-            fullName:
-              [clerkUser.firstName, clerkUser.lastName]
-                .filter(Boolean)
-                .join(' ') || null,
-            phone: clerkUser.phoneNumbers[0]?.phoneNumber || null,
-            role: 'family',
-            onboardingComplete: false,
-          })
-          .returning();
-        dbUser = newUser;
-      }
+      const clerkUserSummary: ClerkUserSummary = {
+        id: clerkUser.id,
+        email: clerkUser.emailAddresses[0]?.emailAddress || identifier,
+        fullName: fullName.length === 0 ? null : fullName,
+        phone: clerkUser.phoneNumbers[0]?.phoneNumber || null,
+      };
 
-      // Step 4: Sign JWT with payload matching what profile route expects
-      // The profile route extracts clerkId from request.user.sub
-      const token = app.jwt.sign(
-        {
-          sub: clerkUser.id, // "user_2abc..." — Clerk user ID
-          email: clerkUser.emailAddresses[0]?.emailAddress,
-          dbId: dbUser.id,
-        },
-        { expiresIn: '7d' }
-      );
+      const dbUser = await getOrCreateDbUser(clerkUserSummary);
+      const token = createAppSessionToken(app, {
+        clerkId: clerkUserSummary.id,
+        email: clerkUserSummary.email,
+        dbUserId: dbUser.id,
+      });
 
       return reply.send({
         token,
-        user: {
-          id: dbUser.id,
-          clerkId: clerkUser.id,
-          email: dbUser.email,
-          phone: dbUser.phone,
-          fullName: dbUser.fullName,
-          avatarUrl: dbUser.avatarUrl,
-          role: dbUser.role,
-          organizationId: dbUser.organizationId,
-          onboardingComplete: dbUser.onboardingComplete,
-        },
+        user: buildUserResponse(dbUser, clerkUserSummary),
       });
     } catch (error: unknown) {
       app.log.error({ error }, 'Sign-in error');
       return reply.status(500).send({
         statusCode: 500,
         error: 'Internal Server Error',
-        message: 'साइन-इन में त्रुटि हुई। कृपया बाद में कोशिश करें।',
+        message: 'Sign-in failed. Please try again later.',
+      });
+    }
+  });
+
+  app.post('/social-exchange', async (request, reply) => {
+    const parsed = socialExchangeSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Validation Error',
+        message: parsed.error.issues.map((issue) => issue.message).join(', '),
+      });
+    }
+
+    try {
+      const claims = await verifyToken(parsed.data.clerkToken, {
+        secretKey: process.env.CLERK_SECRET_KEY!,
+      });
+      const clerkId = claims.sub;
+
+      if (!clerkId || typeof clerkId !== 'string') {
+        return reply.status(401).send({
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'Invalid Clerk session token.',
+        });
+      }
+
+      const clerkUser = await clerk.users.getUser(clerkId);
+      const fullName = [clerkUser.firstName, clerkUser.lastName]
+        .filter((value): value is string => Boolean(value))
+        .join(' ')
+        .trim();
+      const clerkUserSummary: ClerkUserSummary = {
+        id: clerkUser.id,
+        email: clerkUser.emailAddresses[0]?.emailAddress ?? null,
+        fullName: fullName.length === 0 ? null : fullName,
+        phone: clerkUser.phoneNumbers[0]?.phoneNumber || null,
+      };
+
+      const dbUser = await getOrCreateDbUser(clerkUserSummary);
+      const token = createAppSessionToken(app, {
+        clerkId: clerkUserSummary.id,
+        email: clerkUserSummary.email,
+        dbUserId: dbUser.id,
+      });
+
+      return reply.send({
+        token,
+        user: buildUserResponse(dbUser, clerkUserSummary),
+      });
+    } catch (error: unknown) {
+      app.log.error({ error }, 'Social exchange error');
+      return reply.status(401).send({
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Social sign-in could not be completed.',
       });
     }
   });
